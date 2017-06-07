@@ -1225,6 +1225,11 @@ TcpSocketBase::ForwardUp (Ptr<Packet> packet, Ipv4Header header, uint16_t port,
       NS_LOG_DEBUG (TcpSocketState::EcnStateName[m_tcb->m_ecnState] << " -> ECN_CE_RCVD");
       m_ecnCESeq = tcpHeader.GetAckNumber ();
       m_tcb->m_ecnState = TcpSocketState::ECN_CE_RCVD; 
+      m_congestionControl->CwndEvent (m_tcb, TcpSocketState::CA_EVENT_ECN_IS_CE);
+    }
+  else if (header.GetEcn() != Ipv4Header::ECN_NotECT)
+    {
+      m_congestionControl->CwndEvent (m_tcb, TcpSocketState::CA_EVENT_ECN_IS_CE);
     }
   DoForwardUp (packet, fromAddress, toAddress);
 }
@@ -1251,6 +1256,11 @@ TcpSocketBase::ForwardUp6 (Ptr<Packet> packet, Ipv6Header header, uint16_t port,
       NS_LOG_DEBUG (TcpSocketState::EcnStateName[m_tcb->m_ecnState] << " -> ECN_CE_RCVD");
       m_ecnCESeq = tcpHeader.GetAckNumber ();
       m_tcb->m_ecnState = TcpSocketState::ECN_CE_RCVD;  
+      m_congestionControl->CwndEvent (m_tcb, TcpSocketState::CA_EVENT_ECN_IS_CE);
+    }
+  else if (header.GetEcn() != Ipv6Header::ECN_NotECT)
+    {
+      m_congestionControl->CwndEvent (m_tcb, TcpSocketState::CA_EVENT_ECN_IS_CE);
     }
   DoForwardUp (packet, fromAddress, toAddress);
 }
@@ -1962,7 +1972,7 @@ TcpSocketBase::ProcessAck (const SequenceNumber32 &ackNumber, bool scoreboardUpd
               // can increase cWnd)
               segsAcked = (ackNumber - m_recover) / m_tcb->m_segmentSize;
               m_congestionControl->PktsAcked (m_tcb, segsAcked, m_lastRtt);
-
+              m_congestionControl->CwndEvent (m_tcb, TcpSocketState::CA_EVENT_COMPLETE_CWR);
               m_congestionControl->CongestionStateSet (m_tcb, TcpSocketState::CA_OPEN);
               m_tcb->m_congState = TcpSocketState::CA_OPEN;
 
@@ -3089,7 +3099,10 @@ TcpSocketBase::SendPendingData (bool withAck)
             {
               m_tcb->m_nextTxSequence = next;
             }
-
+          if (m_bytesInFlight.Get () == 0)
+            {
+              m_congestionControl->CwndEvent (m_tcb, TcpSocketState::CA_EVENT_TX_START);
+            }
           uint32_t sz = SendDataPacket (m_tcb->m_nextTxSequence, s, withAck);
           m_tcb->m_nextTxSequence += sz;
 
@@ -3260,6 +3273,7 @@ TcpSocketBase::ReceivedData (Ptr<Packet> p, const TcpHeader& tcpHeader)
   // Now send a new ACK packet acknowledging all received and delivered data
   if (m_rxBuffer->Size () > m_rxBuffer->Available () || m_rxBuffer->NextRxSequence () > expectedSeq + p->GetSize ())
     { // A gap exists in the buffer, or we filled a gap: Always ACK
+       m_congestionControl->CwndEvent (m_tcb, TcpSocketState::CA_EVENT_NON_DELAYED_ACK);
        if (m_tcb->m_ecnState == TcpSocketState::ECN_CE_RCVD || m_tcb->m_ecnState == TcpSocketState::ECN_ECE_SENT)
          {
            SendEmptyPacket (TcpHeader::ACK | TcpHeader::ECE);
@@ -3277,6 +3291,7 @@ TcpSocketBase::ReceivedData (Ptr<Packet> p, const TcpHeader& tcpHeader)
         {
           m_delAckEvent.Cancel ();
           m_delAckCount = 0;
+          m_congestionControl->CwndEvent (m_tcb, TcpSocketState::CA_EVENT_NON_DELAYED_ACK);
           if (m_tcb->m_ecnState == TcpSocketState::ECN_CE_RCVD || m_tcb->m_ecnState == TcpSocketState::ECN_ECE_SENT)
             {
               SendEmptyPacket (TcpHeader::ACK | TcpHeader::ECE);
@@ -3473,7 +3488,7 @@ TcpSocketBase::ReTxTimeout ()
 
   // Cwnd set to 1 MSS
   m_tcb->m_cWnd = m_tcb->m_segmentSize;
-
+  m_congestionControl->CwndEvent (m_tcb, TcpSocketState::CA_EVENT_LOSS);
   m_congestionControl->CongestionStateSet (m_tcb, TcpSocketState::CA_LOSS);
   m_tcb->m_congState = TcpSocketState::CA_LOSS;
 
@@ -3496,6 +3511,7 @@ void
 TcpSocketBase::DelAckTimeout (void)
 {
   m_delAckCount = 0;
+  m_congestionControl->CwndEvent (m_tcb, TcpSocketState::CA_EVENT_DELAYED_ACK);
   if (m_tcb->m_ecnState == TcpSocketState::ECN_CE_RCVD || m_tcb->m_ecnState == TcpSocketState::ECN_ECE_SENT)
     {
       SendEmptyPacket (TcpHeader::ACK | TcpHeader::ECE);

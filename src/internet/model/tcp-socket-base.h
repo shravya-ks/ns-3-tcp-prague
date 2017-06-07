@@ -135,6 +135,18 @@ public:
     CA_LAST_STATE /**< Used only in debug messages */
   } TcpCongState_t;
 
+  typedef enum  
+  {
+    CA_EVENT_TX_START,	   /* first transmit when no packets in flight */
+    CA_EVENT_CWND_RESTART, /* congestion window restart */
+    CA_EVENT_COMPLETE_CWR, /* end of congestion recovery */
+    CA_EVENT_LOSS,         /* loss timeout */
+    CA_EVENT_ECN_NO_CE,    /* ECT set, but not CE marked */
+    CA_EVENT_ECN_IS_CE,    /* received CE marked IP packet */
+    CA_EVENT_DELAYED_ACK,  /* Delayed ack is sent */
+    CA_EVENT_NON_DELAYED_ACK,
+  } TcpCaEvent_t;
+
   /**
    * \brief Definition of the Ecn state machine
    *
@@ -534,8 +546,8 @@ public:
    * TracedCallback signature for tcp packet transmission or reception events.
    *
    * \param [in] packet The packet.
-   * \param [in] header The TcpHeader
-   * \param [in] socket This socket
+   * \param [in] ipv4
+   * \param [in] interface
    */
   typedef void (* TcpTxRxTracedCallback)(const Ptr<const Packet> packet, const TcpHeader& header,
                                          const Ptr<const TcpSocketBase> socket);
