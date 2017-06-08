@@ -2498,18 +2498,51 @@ TcpSocketBase::SendEmptyPacket (uint8_t flags)
    * if both options are set. Once the packet got to layer three, only
    * the corresponding tags will be read.
    */
-  if (GetIpTos ())
+   if (GetIpTos ())
     {
       SocketIpTosTag ipTosTag;
-      ipTosTag.SetTos (GetIpTos ());
+      NS_LOG_LOGIC (" ECT bits should be set on pure ACK and SYN packets in DCTCP");
+      if (m_congestionControl->GetName () == "TcpDctcp" && (GetIpTos () & 0x3) == 0 && !isRetransmission)
+        { 
+          ipTosTag.SetTos (GetIpTos () | 0x2);
+        }
+      else
+        {
+          ipTosTag.SetTos (GetIpTos ());
+        }
       p->AddPacketTag (ipTosTag);
+    }
+  else
+    {
+      if (m_congestionControl->GetName () == "TcpDctcp" && !isRetransmission)
+        {
+          SocketIpTosTag ipTosTag;
+          ipTosTag.SetTos (0x02);
+          p->AddPacketTag (ipTosTag);
+        }
     }
 
   if (IsManualIpv6Tclass ())
     {
       SocketIpv6TclassTag ipTclassTag;
-      ipTclassTag.SetTclass (GetIpv6Tclass ());
+      if (m_congestionControl->GetName () == "TcpDctcp" && (GetIpv6Tclass () & 0x3) == 0 && !isRetransmission)
+        {
+          ipTclassTag.SetTclass (GetIpv6Tclass () | 0x2);
+        }
+      else
+        {
+          ipTclassTag.SetTclass (GetIpv6Tclass ());
+        }
       p->AddPacketTag (ipTclassTag);
+    }
+  else
+    {
+      if (m_congestionControl->GetName () == "TcpDctcp" && !isRetransmission)
+        {
+          SocketIpv6TclassTag ipTclassTag;
+          ipTclassTag.SetTclass (0x02);
+          p->AddPacketTag (ipTclassTag);
+        }
     }
 
   if (IsManualIpTtl ())

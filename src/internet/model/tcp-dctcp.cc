@@ -154,13 +154,46 @@ TcpDctcp::Reset(Ptr<TcpSocketState> tcb)
 void 
 TcpDctcp::CEState0to1 (Ptr<TcpSocketState> tcb)
 {
+  if (!m_ceState && m_delayedAckReserved) 
+    {
+      SequenceNumber32 tmpRcvNxt;
+      /* Save current NextRxSequence. */
+      tmpRcvNxt = m_tsb->m_rxBuffer->NextRxSequence ();
+     
+      /* Generate previous ack without ECE */
+      m_tsb->m_rxBuffer->SetNextRxSequence (m_prioRcvNxt);
+      m_tsb->SendEmptyPacket (TcpHeader::ACK);
 
+      /* Recover current rcv_nxt. */
+      m_tsb->m_rxBuffer->SetNextRxSequence (tmp_rcv_nxt);
+   }
+
+   m_prioRcvNxt = m_tsb->m_rxBuffer->NextRxSequence ();
+   m_ceState = 1;
+   m_tsb->m_ecnState = TcpSocketState::ECN_CE_RCVD;
 }
 
 void 
 TcpDctcp::CEState1to0 (Ptr<TcpSocketState> tcb)
 {
+  if (m_ceState && m_delayedAckReserved) 
+    {
+      SequenceNumber32 tmpRcvNxt;
+      /* Save current NextRxSequence. */
+      tmpRcvNxt = m_tsb->m_rxBuffer->NextRxSequence ();
+     
+      /* Generate previous ack with ECE */
+      m_tsb->m_rxBuffer->SetNextRxSequence (m_prioRcvNxt);
+      m_tsb->SendEmptyPacket (TcpHeader::ACK | TcpHeader::ECE);
 
+      /* Recover current rcv_nxt. */
+      m_tsb->m_rxBuffer->SetNextRxSequence (tmp_rcv_nxt);
+   }
+
+   m_prioRcvNxt = m_tsb->m_rxBuffer->NextRxSequence ();
+   m_ceState = 0;
+   m_tsb->m_ecnState = TcpSocketState::ECN_CE_RCVD;
+   
 }
 
 void 
