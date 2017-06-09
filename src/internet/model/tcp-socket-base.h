@@ -583,7 +583,11 @@ protected:
   virtual bool     SetAllowBroadcast (bool allowBroadcast);
   virtual bool     GetAllowBroadcast (void) const;
 
-
+  /**
+   * \brief TcpDctcp friend class (TcpDctcp can use protected members of this class)
+   * \relates TcpDctcp
+   */
+  friend class TcpDctcp;
 
   // Helper functions: Connection set up
 
@@ -1226,6 +1230,7 @@ protected:
   TracedValue<SequenceNumber32> m_ecnEchoSeq; //!< Sequence number of the last received ECN Echo
   TracedValue<SequenceNumber32> m_ecnCESeq;   //!< Sequence number of the last received Congestion Experienced
   TracedValue<SequenceNumber32> m_ecnCWRSeq;  //!< Sequence number of the last sent CWR 
+  bool                     m_dctcp;           //!< Socket DCTCP capability 
 };
 
 /**

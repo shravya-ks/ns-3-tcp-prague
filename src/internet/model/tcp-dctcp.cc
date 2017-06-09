@@ -97,7 +97,7 @@ void
 TcpDctcp::PktsAcked (Ptr<TcpSocketState> tcb, uint32_t segmentsAcked, const Time &rtt)
 {
   m_ackedBytesTotal += segmentsAcked * tcb->m_segmentSize;
-  if (tcb->m_ecnState == TcpSocketState::ECN_CE_RCVD)
+  if (tcb->m_ecnState == TcpSocketState::ECN_ECE_RCVD)
     {
       m_ackedBytesEcn += segmentsAcked * tcb->m_segmentSize;
     }
@@ -165,12 +165,12 @@ TcpDctcp::CEState0to1 (Ptr<TcpSocketState> tcb)
       m_tsb->SendEmptyPacket (TcpHeader::ACK);
 
       /* Recover current rcv_nxt. */
-      m_tsb->m_rxBuffer->SetNextRxSequence (tmp_rcv_nxt);
+      m_tsb->m_rxBuffer->SetNextRxSequence (tmpRcvNxt);
    }
 
    m_prioRcvNxt = m_tsb->m_rxBuffer->NextRxSequence ();
    m_ceState = 1;
-   m_tsb->m_ecnState = TcpSocketState::ECN_CE_RCVD;
+   //m_tsb->m_ecnState = TcpSocketState::ECN_CE_RCVD;   when it comes here, its already in ecn_ce_rcvd state
 }
 
 void 
@@ -187,12 +187,12 @@ TcpDctcp::CEState1to0 (Ptr<TcpSocketState> tcb)
       m_tsb->SendEmptyPacket (TcpHeader::ACK | TcpHeader::ECE);
 
       /* Recover current rcv_nxt. */
-      m_tsb->m_rxBuffer->SetNextRxSequence (tmp_rcv_nxt);
+      m_tsb->m_rxBuffer->SetNextRxSequence (tmpRcvNxt);
    }
 
    m_prioRcvNxt = m_tsb->m_rxBuffer->NextRxSequence ();
    m_ceState = 0;
-   m_tsb->m_ecnState = TcpSocketState::ECN_CE_RCVD;
+   //m_tsb->m_ecnState = TcpSocketState::ECN_CE_RCVD; // when the ip code point is not ce, it comes here
    
 }
 

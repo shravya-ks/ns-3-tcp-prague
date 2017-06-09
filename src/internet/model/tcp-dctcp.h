@@ -45,7 +45,7 @@ private:
   uint32_t m_ackedBytesEcn;
   uint32_t m_ackedBytesTotal;
   uint32_t m_priorSndUna;
-  uint32_t m_prioRcvNxt;
+  SequenceNumber32 m_prioRcvNxt;
   uint32_t m_dctcpAlpha;
   SequenceNumber32 m_nextSeq;
   uint32_t m_ceState;
