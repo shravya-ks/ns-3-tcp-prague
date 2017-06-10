@@ -191,6 +191,7 @@ TcpL4Protocol::CreateSocket (TypeId congestionTypeId)
   socket->SetTcp (this);
   socket->SetRtt (rtt);
   socket->SetCongestionControlAlgorithm (algo);
+  //algo->SetSocketBase(socket);
 
   m_sockets.push_back (socket);
   return socket;

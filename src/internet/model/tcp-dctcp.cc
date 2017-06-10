@@ -47,24 +47,27 @@ std::string TcpDctcp::GetName () const
   return "TcpDctcp";
 }
 
-TcpDctcp::TcpDctcp (Ptr<TcpSocketBase> tsb)
-  : TcpNewReno (tsb)
+TcpDctcp::TcpDctcp ()
+  : TcpNewReno (),
+    m_tsb(0)
 {
   NS_LOG_FUNCTION (this);
-    m_delayedAckReserved = false;
-    m_lossCwnd = 0;
-    m_ceState = 0;
-    m_tsb = tsb;
+  m_delayedAckReserved = false;
+  m_lossCwnd = 0;
+  m_ceState = 0;
+  m_ackedBytesEcn = 0;
+  m_ackedBytesTotal = 0;
+  m_priorRcvNxtFlag = false;
 }
 
 TcpDctcp::TcpDctcp (const TcpDctcp& sock)
-  : TcpNewReno (sock)
+  : TcpNewReno (sock),
+    m_tsb (sock.m_tsb)
 {
   NS_LOG_FUNCTION (this);
     m_delayedAckReserved = (sock.m_delayedAckReserved);
     m_lossCwnd = (sock.m_lossCwnd);
     m_ceState = (sock.m_ceState);
-    m_tsb = sock.m_tsb;
 }
 
 TcpDctcp::~TcpDctcp (void)
@@ -72,6 +75,11 @@ TcpDctcp::~TcpDctcp (void)
   NS_LOG_FUNCTION (this);
 }
 
+void
+TcpDctcp::SetSocketBase (Ptr<TcpSocketBase> tsb)
+{
+  m_tsb = tsb;
+}
 Ptr<TcpCongestionOps> TcpDctcp::Fork (void)
 {
   NS_LOG_FUNCTION (this);
@@ -81,6 +89,7 @@ Ptr<TcpCongestionOps> TcpDctcp::Fork (void)
 uint32_t 
 TcpDctcp::GetSsThresh (Ptr<const TcpSocketState> tcb, uint32_t bytesInFlight)
 {
+  NS_LOG_FUNCTION (this << tcb << bytesInFlight);
   m_lossCwnd = tcb->m_cWnd;
   uint32_t val = tcb->m_cWnd - ((tcb->m_cWnd * m_dctcpAlpha) >> 11U);
   if( val > 2U * tcb->m_segmentSize)
@@ -96,6 +105,7 @@ TcpDctcp::GetSsThresh (Ptr<const TcpSocketState> tcb, uint32_t bytesInFlight)
 void 
 TcpDctcp::PktsAcked (Ptr<TcpSocketState> tcb, uint32_t segmentsAcked, const Time &rtt)
 {
+  NS_LOG_FUNCTION (this << tcb << segmentsAcked << rtt);
   m_ackedBytesTotal += segmentsAcked * tcb->m_segmentSize;
   if (tcb->m_ecnState == TcpSocketState::ECN_ECE_RCVD)
     {
@@ -146,6 +156,7 @@ TcpDctcp::SetDctcpAlpha (uint32_t alpha)
 void 
 TcpDctcp::Reset(Ptr<TcpSocketState> tcb)
 {
+  NS_LOG_FUNCTION (this << tcb);
   m_nextSeq = tcb->m_nextTxSequence;
   m_ackedBytesEcn = 0;
   m_ackedBytesTotal = 0;
@@ -154,52 +165,62 @@ TcpDctcp::Reset(Ptr<TcpSocketState> tcb)
 void 
 TcpDctcp::CEState0to1 (Ptr<TcpSocketState> tcb)
 {
-  if (!m_ceState && m_delayedAckReserved) 
+  NS_LOG_FUNCTION (this << tcb);
+  if (!m_ceState && m_delayedAckReserved && m_priorRcvNxtFlag) 
     {
       SequenceNumber32 tmpRcvNxt;
       /* Save current NextRxSequence. */
       tmpRcvNxt = m_tsb->m_rxBuffer->NextRxSequence ();
-     
+   
       /* Generate previous ack without ECE */
-      m_tsb->m_rxBuffer->SetNextRxSequence (m_prioRcvNxt);
+      m_tsb->m_rxBuffer->SetNextRxSequence (m_priorRcvNxt);
       m_tsb->SendEmptyPacket (TcpHeader::ACK);
 
       /* Recover current rcv_nxt. */
       m_tsb->m_rxBuffer->SetNextRxSequence (tmpRcvNxt);
    }
 
-   m_prioRcvNxt = m_tsb->m_rxBuffer->NextRxSequence ();
+  if(m_priorRcvNxtFlag == false)
+    {
+      m_priorRcvNxtFlag = true;
+    }
+   m_priorRcvNxt = m_tsb->m_rxBuffer->NextRxSequence ();
    m_ceState = 1;
-   //m_tsb->m_ecnState = TcpSocketState::ECN_CE_RCVD;   when it comes here, its already in ecn_ce_rcvd state
+   tcb->m_ecnState = TcpSocketState::ECN_CE_RCVD;  
 }
 
 void 
 TcpDctcp::CEState1to0 (Ptr<TcpSocketState> tcb)
 {
-  if (m_ceState && m_delayedAckReserved) 
+  NS_LOG_FUNCTION (this << tcb);
+  if (m_ceState && m_delayedAckReserved && m_priorRcvNxtFlag) 
     {
       SequenceNumber32 tmpRcvNxt;
       /* Save current NextRxSequence. */
       tmpRcvNxt = m_tsb->m_rxBuffer->NextRxSequence ();
      
       /* Generate previous ack with ECE */
-      m_tsb->m_rxBuffer->SetNextRxSequence (m_prioRcvNxt);
+      m_tsb->m_rxBuffer->SetNextRxSequence (m_priorRcvNxt);
       m_tsb->SendEmptyPacket (TcpHeader::ACK | TcpHeader::ECE);
 
       /* Recover current rcv_nxt. */
       m_tsb->m_rxBuffer->SetNextRxSequence (tmpRcvNxt);
    }
-
-   m_prioRcvNxt = m_tsb->m_rxBuffer->NextRxSequence ();
+  
+   if(m_priorRcvNxtFlag == false)
+    {
+      m_priorRcvNxtFlag = true;
+    }
+   m_priorRcvNxt = m_tsb->m_rxBuffer->NextRxSequence ();
    m_ceState = 0;
-   //m_tsb->m_ecnState = TcpSocketState::ECN_CE_RCVD; // when the ip code point is not ce, it comes here
-   
+   tcb->m_ecnState = TcpSocketState::ECN_IDLE; 
 }
 
 void 
 TcpDctcp::UpdateAckReserved (Ptr<TcpSocketState> tcb,
                           const TcpSocketState::TcpCaEvent_t event)
 {
+  NS_LOG_FUNCTION (this << tcb << event);
   switch (event) 
     {
       case TcpSocketState::CA_EVENT_ECN_IS_CE:
@@ -220,6 +241,7 @@ void
 TcpDctcp::CwndEvent(Ptr<TcpSocketState> tcb,
                           const TcpSocketState::TcpCaEvent_t event)
 {
+  NS_LOG_FUNCTION (this << tcb << event);
   switch (event) 
     {
       case TcpSocketState::CA_EVENT_ECN_IS_CE:

@@ -140,7 +140,7 @@ TcpSocketBase::GetTypeId (void)
                     MakeBooleanAccessor (&TcpSocketBase::m_ecn),
                     MakeBooleanChecker ())
     .AddAttribute ("DCTCP", "True if Socket type is DCTCP",
-                   BooleanValue (false),
+                   BooleanValue (true),
                    MakeBooleanAccessor (&TcpSocketBase::m_dctcp),
                    MakeBooleanChecker ())
     .AddTraceSource ("RTO",
@@ -373,8 +373,8 @@ TcpSocketBase::TcpSocketBase (void)
     m_ecn(false),
     m_ecnEchoSeq (0),
     m_ecnCESeq (0),
-    m_ecnCWRSeq (0),
-    m_dctcp(false)
+    m_ecnCWRSeq (0)
+    
 {
   NS_LOG_FUNCTION (this);
   m_rxBuffer = CreateObject<TcpRxBuffer> ();
@@ -4189,7 +4189,9 @@ void
 TcpSocketBase::SetCongestionControlAlgorithm (Ptr<TcpCongestionOps> algo)
 {
   NS_LOG_FUNCTION (this << algo);
+  //algo->SetSocketBase(this);
   m_congestionControl = algo;
+  m_congestionControl->SetSocketBase(this);
 }
 
 Ptr<TcpSocketBase>

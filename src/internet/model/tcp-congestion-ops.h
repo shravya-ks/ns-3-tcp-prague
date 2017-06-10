@@ -58,7 +58,7 @@ public:
    */
   static TypeId GetTypeId (void);
 
-  TcpCongestionOps (Ptr<TcpSocketBase> tsb = NULL);
+  TcpCongestionOps ();
 
   /**
    * \brief Copy constructor.
@@ -162,6 +162,16 @@ public:
    * \return a pointer of the copied object
    */
   virtual Ptr<TcpCongestionOps> Fork () = 0;
+
+  /**
+   * \brief Assigns socket base to the pointer in DCTCP
+   *
+   * \param tsb 
+   */
+  virtual void SetSocketBase (Ptr<TcpSocketBase> tsb)
+  {
+  }
+  
 };
 
 /**
@@ -181,7 +191,7 @@ public:
    */
   static TypeId GetTypeId (void);
 
-  TcpNewReno (Ptr<TcpSocketBase> tsb = NULL);
+  TcpNewReno ();
 
   /**
    * \brief Copy constructor.

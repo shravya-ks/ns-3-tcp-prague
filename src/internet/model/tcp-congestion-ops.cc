@@ -36,7 +36,7 @@ TcpCongestionOps::GetTypeId (void)
   return tid;
 }
 
-TcpCongestionOps::TcpCongestionOps (Ptr<TcpSocketBase> tsb) : Object ()
+TcpCongestionOps::TcpCongestionOps () : Object ()
 {
 }
 
@@ -64,7 +64,7 @@ TcpNewReno::GetTypeId (void)
   return tid;
 }
 
-TcpNewReno::TcpNewReno (Ptr<TcpSocketBase> tsb) : TcpCongestionOps (tsb)
+TcpNewReno::TcpNewReno () : TcpCongestionOps ()
 {
   NS_LOG_FUNCTION (this);
 }

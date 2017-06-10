@@ -15,7 +15,7 @@ public:
   /**
    * Create an unbound tcp socket.
    */
-  TcpDctcp (Ptr<TcpSocketBase> tsb = NULL);
+  TcpDctcp ();
   /**
    * \brief Copy constructor
    * \param sock the object to copy
@@ -23,6 +23,7 @@ public:
   TcpDctcp (const TcpDctcp& sock);
   virtual ~TcpDctcp (void);
   virtual std::string GetName () const;
+  virtual void SetSocketBase (Ptr<TcpSocketBase> tsb);
   virtual Ptr<TcpCongestionOps> Fork ();
   virtual uint32_t GetSsThresh (Ptr<const TcpSocketState> tcb,
                                 uint32_t bytesInFlight);
@@ -44,8 +45,8 @@ private:
   Ptr<TcpSocketBase> m_tsb;
   uint32_t m_ackedBytesEcn;
   uint32_t m_ackedBytesTotal;
-  uint32_t m_priorSndUna;
-  SequenceNumber32 m_prioRcvNxt;
+  SequenceNumber32 m_priorRcvNxt;
+  bool m_priorRcvNxtFlag;
   uint32_t m_dctcpAlpha;
   SequenceNumber32 m_nextSeq;
   uint32_t m_ceState;
