@@ -140,7 +140,7 @@ TcpSocketBase::GetTypeId (void)
                     MakeBooleanAccessor (&TcpSocketBase::m_ecn),
                     MakeBooleanChecker ())
     .AddAttribute ("DCTCP", "True if Socket type is DCTCP",
-                   BooleanValue (true),
+                   BooleanValue (false),
                    MakeBooleanAccessor (&TcpSocketBase::m_dctcp),
                    MakeBooleanChecker ())
     .AddTraceSource ("RTO",
@@ -373,7 +373,8 @@ TcpSocketBase::TcpSocketBase (void)
     m_ecn(false),
     m_ecnEchoSeq (0),
     m_ecnCESeq (0),
-    m_ecnCWRSeq (0)
+    m_ecnCWRSeq (0),
+    m_dctcp(false)
     
 {
   NS_LOG_FUNCTION (this);
@@ -2872,7 +2873,8 @@ TcpSocketBase::SendDataPacket (SequenceNumber32 seq, uint32_t maxSize, bool with
     {
       NS_LOG_INFO ("Backoff mechanism by reducing CWND  by half because we've received ECN Echo");
       m_tcb->m_ssThresh = m_congestionControl->GetSsThresh (m_tcb, BytesInFlight ());  
-      m_tcb->m_cWnd = std::max ((uint32_t)m_tcb->m_cWnd/2, m_tcb->m_segmentSize);
+      //m_tcb->m_cWnd = std::max ((uint32_t)m_tcb->m_cWnd/2, m_tcb->m_segmentSize);
+      m_congestionControl->ReduceCwnd (m_tcb);
       flags |= TcpHeader::CWR; 
       m_ecnCWRSeq = seq;
       m_tcb->m_ecnState = TcpSocketState::ECN_CWR_SENT;

@@ -25,12 +25,9 @@ public:
   virtual std::string GetName () const;
   virtual void SetSocketBase (Ptr<TcpSocketBase> tsb);
   virtual Ptr<TcpCongestionOps> Fork ();
-  virtual uint32_t GetSsThresh (Ptr<const TcpSocketState> tcb,
-                                uint32_t bytesInFlight);
-
+  virtual void ReduceCwnd (Ptr<TcpSocketState> tcb);
   virtual void PktsAcked (Ptr<TcpSocketState> tcb, uint32_t segmentsAcked,
                           const Time &rtt);
-
   virtual void CwndEvent (Ptr<TcpSocketState> tcb,
                           const TcpSocketState::TcpCaEvent_t event);
 
@@ -51,7 +48,6 @@ private:
   SequenceNumber32 m_nextSeq;
   uint32_t m_ceState;
   bool m_delayedAckReserved;
-  uint32_t m_lossCwnd;
   uint32_t m_dctcpShiftG;
   uint32_t m_dctcpClampAlphaOnLoss; 
 };

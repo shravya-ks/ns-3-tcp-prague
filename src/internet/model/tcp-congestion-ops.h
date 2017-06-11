@@ -171,7 +171,15 @@ public:
   virtual void SetSocketBase (Ptr<TcpSocketBase> tsb)
   {
   }
-  
+
+  /**
+   * \brief Reduces congestion window on receipt of ECN Echo Flag
+   *
+   * \param tcb internal congestion state
+   */
+   virtual void ReduceCwnd (Ptr<TcpSocketState> tcb)
+   {
+   }
 };
 
 /**
@@ -206,7 +214,7 @@ public:
   virtual void IncreaseWindow (Ptr<TcpSocketState> tcb, uint32_t segmentsAcked);
   virtual uint32_t GetSsThresh (Ptr<const TcpSocketState> tcb,
                                 uint32_t bytesInFlight);
-
+  virtual void ReduceCwnd(Ptr<TcpSocketState> tcb);
   virtual Ptr<TcpCongestionOps> Fork ();
 
 protected:

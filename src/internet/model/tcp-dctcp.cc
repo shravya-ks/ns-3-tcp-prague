@@ -53,7 +53,6 @@ TcpDctcp::TcpDctcp ()
 {
   NS_LOG_FUNCTION (this);
   m_delayedAckReserved = false;
-  m_lossCwnd = 0;
   m_ceState = 0;
   m_ackedBytesEcn = 0;
   m_ackedBytesTotal = 0;
@@ -66,7 +65,6 @@ TcpDctcp::TcpDctcp (const TcpDctcp& sock)
 {
   NS_LOG_FUNCTION (this);
     m_delayedAckReserved = (sock.m_delayedAckReserved);
-    m_lossCwnd = (sock.m_lossCwnd);
     m_ceState = (sock.m_ceState);
 }
 
@@ -86,20 +84,12 @@ Ptr<TcpCongestionOps> TcpDctcp::Fork (void)
   return CopyObject<TcpDctcp> (this);
 }
 
-uint32_t 
-TcpDctcp::GetSsThresh (Ptr<const TcpSocketState> tcb, uint32_t bytesInFlight)
+void 
+TcpDctcp::ReduceCwnd (Ptr<TcpSocketState> tcb)
 {
-  NS_LOG_FUNCTION (this << tcb << bytesInFlight);
-  m_lossCwnd = tcb->m_cWnd;
+  NS_LOG_FUNCTION (this << tcb);
   uint32_t val = tcb->m_cWnd - ((tcb->m_cWnd * m_dctcpAlpha) >> 11U);
-  if( val > 2U * tcb->m_segmentSize)
-    {
-      return val;
-    }
-  else
-    {
-      return 2U * tcb->m_segmentSize;
-    } 
+  tcb->m_cWnd = std::max(val,tcb->m_segmentSize);
 }
 
 void 
