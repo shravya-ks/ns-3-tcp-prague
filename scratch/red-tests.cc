@@ -257,7 +257,7 @@ main (int argc, char *argv[])
 {
   //LogComponentEnable ("RedQueueDisc", LOG_LEVEL_INFO);
   LogComponentEnable ("TcpDctcp", LOG_LEVEL_ALL);
-
+  //LogComponentEnable ("TcpSocketBase", LOG_LEVEL_ALL);
   uint32_t redTest;
   std::string redLinkDataRate = "1.5Mbps";
   std::string redLinkDelay = "20ms";
@@ -330,6 +330,7 @@ main (int argc, char *argv[])
   if (redTest == 2) // test like 1, but with ecn
     {
       Config::SetDefault ("ns3::TcpSocketBase::UseEcn", BooleanValue (true));
+      Config::SetDefault ("ns3::TcpSocketBase::DCTCP", BooleanValue (true));
       Config::SetDefault ("ns3::RedQueueDisc::UseEcn", BooleanValue (true));
     }
   else if (redTest == 3) // test like 1, but with bad params

@@ -577,6 +577,14 @@ protected:
    */
   void SetEcn (SocketWho who);
 
+  
+  /**
+   * \brief Forcefully set the dctcp mode on
+   *
+   * \param who socket to force
+   */
+  void SetDctcp (SocketWho who);
+
   /**
    * \brief Forcefully set the initial ssth
    *

@@ -38,18 +38,18 @@ private:
   void UpdateAckReserved (Ptr<TcpSocketState> tcb,
                           const TcpSocketState::TcpCaEvent_t event);
   void Reset(Ptr<TcpSocketState> tcb);
-  void SetDctcpAlpha (uint32_t alpha);
+  void SetDctcpAlpha (double alpha);
   Ptr<TcpSocketBase> m_tsb;
   uint32_t m_ackedBytesEcn;
   uint32_t m_ackedBytesTotal;
   SequenceNumber32 m_priorRcvNxt;
   bool m_priorRcvNxtFlag;
-  uint32_t m_dctcpAlpha;
+  double m_dctcpAlpha;
   SequenceNumber32 m_nextSeq;
+  bool m_nextSeqFlag;
   uint32_t m_ceState;
   bool m_delayedAckReserved;
-  uint32_t m_dctcpShiftG;
-  uint32_t m_dctcpClampAlphaOnLoss; 
+  double m_dctcpShiftG;
 };
 
 }

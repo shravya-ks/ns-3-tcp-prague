@@ -1,5 +1,4 @@
 #include "tcp-dctcp.h"
-
 #include "ns3/log.h"
 #include "ns3/trace-source-accessor.h"
 #include "ns3/simulator.h"
@@ -25,19 +24,14 @@ TypeId TcpDctcp::GetTypeId (void)
     .SetGroupName ("Internet")
     .AddAttribute ("DctcpShiftG",
                    "Parameter G for updating dctcp_alpha",
-                   UintegerValue (4),
-                   MakeUintegerAccessor (&TcpDctcp::m_dctcpShiftG),
-                   MakeUintegerChecker<uint32_t> ())
+                   DoubleValue (0.0625),
+                   MakeDoubleAccessor (&TcpDctcp::m_dctcpShiftG),
+                   MakeDoubleChecker<double> (0))
     .AddAttribute ("DctcpAlphaOnInit",
                    "Parameter for initial alpha value",
-                   UintegerValue (1024),
-                   MakeUintegerAccessor (&TcpDctcp::SetDctcpAlpha),
-                   MakeUintegerChecker<uint32_t> ())
-    .AddAttribute ("DctcpClampAlphaOnLoss",
-                   "Parameter for clamping alpha on loss",
-                   BooleanValue (false),
-                   MakeBooleanAccessor (&TcpDctcp::m_dctcpClampAlphaOnLoss),
-                   MakeBooleanChecker ())
+                   DoubleValue (0.0),
+                   MakeDoubleAccessor (&TcpDctcp::SetDctcpAlpha),
+                   MakeDoubleChecker<double> (0))
   ;
   return tid;
 }
@@ -57,6 +51,7 @@ TcpDctcp::TcpDctcp ()
   m_ackedBytesEcn = 0;
   m_ackedBytesTotal = 0;
   m_priorRcvNxtFlag = false;
+  m_nextSeqFlag = false;
 }
 
 TcpDctcp::TcpDctcp (const TcpDctcp& sock)
@@ -88,7 +83,7 @@ void
 TcpDctcp::ReduceCwnd (Ptr<TcpSocketState> tcb)
 {
   NS_LOG_FUNCTION (this << tcb);
-  uint32_t val = tcb->m_cWnd - ((tcb->m_cWnd * m_dctcpAlpha) >> 11U);
+  uint32_t val = (int)((1 - m_dctcpAlpha/2.0) * tcb->m_cWnd);
   tcb->m_cWnd = std::max(val,tcb->m_segmentSize);
 }
 
@@ -101,46 +96,32 @@ TcpDctcp::PktsAcked (Ptr<TcpSocketState> tcb, uint32_t segmentsAcked, const Time
     {
       m_ackedBytesEcn += segmentsAcked * tcb->m_segmentSize;
     }
+  if (m_nextSeqFlag == false)
+    {
+      m_nextSeq = tcb->m_nextTxSequence;
+      m_nextSeqFlag = true;
+    }
   if (tcb->m_lastAckedSeq >= m_nextSeq)
     {
-      uint64_t bytesEcn = m_ackedBytesEcn;
-      uint32_t alpha = m_dctcpAlpha;
-      if(alpha < (alpha >> m_dctcpShiftG) && alpha !=0 )
+      double bytesEcn;  
+      if(m_ackedBytesTotal >  0)
         {
-          alpha -= alpha;
+          bytesEcn = (double)m_ackedBytesEcn/m_ackedBytesTotal;
         }
       else
         {
-          alpha -= (alpha >> m_dctcpShiftG);
+          bytesEcn = 0.0;
         }
-     
-      if (bytesEcn) 
-        {
-          // If m_dctcpShiftG == 1, a 32bit value would overflow after 8 Mbytes.
-          bytesEcn <<= (10 - m_dctcpShiftG);
-          if(m_ackedBytesTotal >  1)
-            {
-              bytesEcn = bytesEcn/m_ackedBytesTotal;
-            }
-          if( (alpha + (uint32_t) bytesEcn) < 1024)
-            {
-              alpha = alpha + (uint32_t) bytesEcn;
-            }
-          else
-            {
-              alpha = 1024;
-            }
-         }
-      m_dctcpAlpha = alpha;
+      m_dctcpAlpha = (1.0 - m_dctcpShiftG) * m_dctcpAlpha + m_dctcpShiftG * bytesEcn;
       Reset(tcb);
     }
 }
 
 void
-TcpDctcp::SetDctcpAlpha (uint32_t alpha)
+TcpDctcp::SetDctcpAlpha (double alpha)
 {
   NS_LOG_FUNCTION (this << alpha);
-  m_dctcpAlpha = alpha < 1024? alpha:1024;
+  m_dctcpAlpha = alpha;
 }
 
 void 
@@ -183,6 +164,7 @@ void
 TcpDctcp::CEState1to0 (Ptr<TcpSocketState> tcb)
 {
   NS_LOG_FUNCTION (this << tcb);
+  NS_LOG_DEBUG("here");
   if (m_ceState && m_delayedAckReserved && m_priorRcvNxtFlag) 
     {
       SequenceNumber32 tmpRcvNxt;
@@ -192,6 +174,7 @@ TcpDctcp::CEState1to0 (Ptr<TcpSocketState> tcb)
       /* Generate previous ack with ECE */
       m_tsb->m_rxBuffer->SetNextRxSequence (m_priorRcvNxt);
       m_tsb->SendEmptyPacket (TcpHeader::ACK | TcpHeader::ECE);
+      NS_LOG_DEBUG("ECE flags with Send Empty Packet called");
 
       /* Recover current rcv_nxt. */
       m_tsb->m_rxBuffer->SetNextRxSequence (tmpRcvNxt);
@@ -213,11 +196,11 @@ TcpDctcp::UpdateAckReserved (Ptr<TcpSocketState> tcb,
   NS_LOG_FUNCTION (this << tcb << event);
   switch (event) 
     {
-      case TcpSocketState::CA_EVENT_ECN_IS_CE:
+      case TcpSocketState::CA_EVENT_DELAYED_ACK:
 		if (!m_delayedAckReserved)
                   m_delayedAckReserved = true;
 		break;
-	case TcpSocketState::CA_EVENT_ECN_NO_CE:
+	case TcpSocketState::CA_EVENT_NON_DELAYED_ACK:
 		if (m_delayedAckReserved)
                   m_delayedAckReserved = false;
 		break;

@@ -920,6 +920,23 @@ TcpGeneralTest::SetEcn (SocketWho who)
     }
 }
 
+void 
+TcpGeneralTest::SetDctcp (SocketWho who)
+{
+  if (who == SENDER)
+    {
+      m_senderSocket->SetDctcp ();
+    }
+   else if (who == RECEIVER)
+    {
+      m_receiverSocket->SetDctcp ();
+    }
+  else
+    {
+      NS_FATAL_ERROR ("Not defined");
+    }
+}
+
 void
 TcpGeneralTest::SetInitialSsThresh (SocketWho who, uint32_t initialSsThresh)
 {

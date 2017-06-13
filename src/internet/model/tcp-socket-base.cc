@@ -2509,7 +2509,7 @@ TcpSocketBase::SendEmptyPacket (uint8_t flags)
     {
       SocketIpTosTag ipTosTag;
       NS_LOG_LOGIC (" ECT bits should be set on pure ACK and SYN packets in DCTCP");
-      if (m_congestionControl->GetName () == "TcpDctcp" && (GetIpTos () & 0x3) == 0)
+      if (m_dctcp && (GetIpTos () & 0x3) == 0)
         { 
           ipTosTag.SetTos (GetIpTos () | 0x2);
         }
@@ -2521,7 +2521,7 @@ TcpSocketBase::SendEmptyPacket (uint8_t flags)
     }
   else
     {
-      if (m_congestionControl->GetName () == "TcpDctcp")
+      if (m_dctcp)
         {
           SocketIpTosTag ipTosTag;
           ipTosTag.SetTos (0x02);
@@ -2532,7 +2532,7 @@ TcpSocketBase::SendEmptyPacket (uint8_t flags)
   if (IsManualIpv6Tclass ())
     {
       SocketIpv6TclassTag ipTclassTag;
-      if (m_congestionControl->GetName () == "TcpDctcp" && (GetIpv6Tclass () & 0x3) == 0)
+      if (m_dctcp && (GetIpv6Tclass () & 0x3) == 0)
         {
           ipTclassTag.SetTclass (GetIpv6Tclass () | 0x2);
         }
@@ -2544,7 +2544,7 @@ TcpSocketBase::SendEmptyPacket (uint8_t flags)
     }
   else
     {
-      if (m_congestionControl->GetName () == "TcpDctcp")
+      if (m_dctcp)
         {
           SocketIpv6TclassTag ipTclassTag;
           ipTclassTag.SetTclass (0x02);
@@ -4217,6 +4217,13 @@ void
 TcpSocketBase::SetEcn()
 {
   m_ecn = true;
+}
+
+void
+TcpSocketBase::SetDctcp()
+{
+  m_dctcp = true;
+  SetEcn();
 }
 
 //RttHistory methods
