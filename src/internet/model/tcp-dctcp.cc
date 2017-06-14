@@ -186,6 +186,7 @@ TcpDctcp::CEState1to0 (Ptr<TcpSocketState> tcb)
     }
    m_priorRcvNxt = m_tsb->m_rxBuffer->NextRxSequence ();
    m_ceState = 0;
+   NS_LOG_DEBUG("cestate1to0"<< tcb->m_ecnState);
    tcb->m_ecnState = TcpSocketState::ECN_IDLE; 
 }
 
