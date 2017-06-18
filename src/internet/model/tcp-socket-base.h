@@ -520,10 +520,6 @@ public:
    */
   void SetEcn();
   
-  /**
-   * \brief Sets the variable m_dctcp true to use DCTCP functionality
-   */
-  void SetDctcp();
   
   // Necessary implementations of null functions from ns3::Socket
   virtual enum SocketErrno GetErrno (void) const;    // returns m_errno
@@ -1235,7 +1231,6 @@ protected:
   TracedValue<SequenceNumber32> m_ecnEchoSeq; //!< Sequence number of the last received ECN Echo
   TracedValue<SequenceNumber32> m_ecnCESeq;   //!< Sequence number of the last received Congestion Experienced
   TracedValue<SequenceNumber32> m_ecnCWRSeq;  //!< Sequence number of the last sent CWR 
-  bool                     m_dctcp;           //!< Socket DCTCP capability 
 };
 
 /**

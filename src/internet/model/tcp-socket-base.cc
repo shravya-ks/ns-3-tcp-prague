@@ -139,10 +139,6 @@ TcpSocketBase::GetTypeId (void)
                     BooleanValue (false),
                     MakeBooleanAccessor (&TcpSocketBase::m_ecn),
                     MakeBooleanChecker ())
-    .AddAttribute ("DCTCP", "True if Socket type is DCTCP",
-                   BooleanValue (false),
-                   MakeBooleanAccessor (&TcpSocketBase::m_dctcp),
-                   MakeBooleanChecker ())
     .AddTraceSource ("RTO",
                      "Retransmission timeout",
                      MakeTraceSourceAccessor (&TcpSocketBase::m_rto),
@@ -373,8 +369,7 @@ TcpSocketBase::TcpSocketBase (void)
     m_ecn(false),
     m_ecnEchoSeq (0),
     m_ecnCESeq (0),
-    m_ecnCWRSeq (0),
-    m_dctcp(false)
+    m_ecnCWRSeq (0)
     
 {
   NS_LOG_FUNCTION (this);
@@ -459,8 +454,7 @@ TcpSocketBase::TcpSocketBase (const TcpSocketBase& sock)
     m_rxTrace (sock.m_rxTrace),
     m_ecn (sock.m_ecn),
     m_ecnEchoSeq (sock.m_ecnEchoSeq),
-    m_ecnCWRSeq (sock.m_ecnCWRSeq),
-    m_dctcp (sock.m_dctcp)    
+    m_ecnCWRSeq (sock.m_ecnCWRSeq)
 {
   NS_LOG_FUNCTION (this);
   NS_LOG_LOGIC ("Invoked the copy constructor");
@@ -1234,7 +1228,7 @@ TcpSocketBase::ForwardUp (Ptr<Packet> packet, Ipv4Header header, uint16_t port,
       m_tcb->m_ecnState = TcpSocketState::ECN_CE_RCVD; 
       m_congestionControl->CwndEvent (m_tcb, TcpSocketState::CA_EVENT_ECN_IS_CE);
     }
-  else if (header.GetEcn() != Ipv4Header::ECN_NotECT)
+  else if (header.GetEcn() != Ipv4Header::ECN_NotECT && m_tcb->m_ecnState != TcpSocketState::ECN_DISABLED)
     {
       m_congestionControl->CwndEvent (m_tcb, TcpSocketState::CA_EVENT_ECN_NO_CE);
     }
@@ -1338,7 +1332,7 @@ TcpSocketBase::DoForwardUp (Ptr<Packet> packet, const Address &fromAddress,
                   NS_LOG_DEBUG (TcpSocketState::EcnStateName[m_tcb->m_ecnState] << " -> ECN_IDLE");
                 }
             }
-          if (m_tcb->m_ecnState == TcpSocketState::ECN_CE_RCVD || (m_tcb->m_ecnState == TcpSocketState::ECN_ECE_SENT && m_congestionControl->GetName () != "TcpDctcp"))
+          if (m_tcb->m_ecnState == TcpSocketState::ECN_CE_RCVD || m_tcb->m_ecnState == TcpSocketState::ECN_ECE_SENT )
             {
               // Receiver sets ECE flags when it receives a packet with CE bit on or sender hasn’t responded to ECN echo sent by receiver
               SendEmptyPacket (TcpHeader::ACK | TcpHeader::ECE);
@@ -1553,7 +1547,7 @@ TcpSocketBase::ProcessEstablished (Ptr<Packet> packet, const TcpHeader& tcpHeade
                        " HighTxMark = " << m_tcb->m_highTxMark);
 
           // Receiver sets ECE flags when it receives a packet with CE bit on or sender hasn’t responded to ECN echo sent by receiver
-          if (m_tcb->m_ecnState == TcpSocketState::ECN_CE_RCVD || (m_tcb->m_ecnState == TcpSocketState::ECN_ECE_SENT && m_congestionControl->GetName () != "TcpDctcp"))
+          if (m_tcb->m_ecnState == TcpSocketState::ECN_CE_RCVD || m_tcb->m_ecnState == TcpSocketState::ECN_ECE_SENT)
             {
               SendEmptyPacket (TcpHeader::ACK | TcpHeader::ECE);
               m_tcb->m_ecnState = TcpSocketState::ECN_ECE_SENT;
@@ -3279,7 +3273,7 @@ TcpSocketBase::ReceivedData (Ptr<Packet> p, const TcpHeader& tcpHeader)
   SequenceNumber32 expectedSeq = m_rxBuffer->NextRxSequence ();
   if (!m_rxBuffer->Add (p, tcpHeader))
     { // Insert failed: No data or RX buffer full
-       if (m_tcb->m_ecnState == TcpSocketState::ECN_CE_RCVD || (m_tcb->m_ecnState == TcpSocketState::ECN_ECE_SENT && m_congestionControl->GetName () != "TcpDctcp"))
+       if (m_tcb->m_ecnState == TcpSocketState::ECN_CE_RCVD || m_tcb->m_ecnState == TcpSocketState::ECN_ECE_SENT)
          {
            SendEmptyPacket (TcpHeader::ACK | TcpHeader::ECE);
            m_tcb->m_ecnState = TcpSocketState::ECN_ECE_SENT;
@@ -3315,7 +3309,7 @@ TcpSocketBase::ReceivedData (Ptr<Packet> p, const TcpHeader& tcpHeader)
   if (m_rxBuffer->Size () > m_rxBuffer->Available () || m_rxBuffer->NextRxSequence () > expectedSeq + p->GetSize ())
     { // A gap exists in the buffer, or we filled a gap: Always ACK
        m_congestionControl->CwndEvent (m_tcb, TcpSocketState::CA_EVENT_NON_DELAYED_ACK);
-       if (m_tcb->m_ecnState == TcpSocketState::ECN_CE_RCVD || (m_tcb->m_ecnState == TcpSocketState::ECN_ECE_SENT && m_congestionControl->GetName () != "TcpDctcp"))
+       if (m_tcb->m_ecnState == TcpSocketState::ECN_CE_RCVD || m_tcb->m_ecnState == TcpSocketState::ECN_ECE_SENT)
          {
            SendEmptyPacket (TcpHeader::ACK | TcpHeader::ECE);
            m_tcb->m_ecnState = TcpSocketState::ECN_ECE_SENT;
@@ -3345,8 +3339,13 @@ TcpSocketBase::ReceivedData (Ptr<Packet> p, const TcpHeader& tcpHeader)
               SendEmptyPacket (TcpHeader::ACK);
             }
         }
+      else if (!m_delAckEvent.IsExpired ())
+        {
+          m_congestionControl->CwndEvent (m_tcb, TcpSocketState::CA_EVENT_DELAYED_ACK);
+        }
       else if (m_delAckEvent.IsExpired ())
         {
+          m_congestionControl->CwndEvent (m_tcb, TcpSocketState::CA_EVENT_DELAYED_ACK);
           m_delAckEvent = Simulator::Schedule (m_delAckTimeout,
                                                &TcpSocketBase::DelAckTimeout, this);
           NS_LOG_LOGIC (this << " scheduled delayed ACK at " <<
@@ -3554,7 +3553,7 @@ TcpSocketBase::DelAckTimeout (void)
 {
   m_delAckCount = 0;
   m_congestionControl->CwndEvent (m_tcb, TcpSocketState::CA_EVENT_DELAYED_ACK);
-  if (m_tcb->m_ecnState == TcpSocketState::ECN_CE_RCVD || (m_tcb->m_ecnState == TcpSocketState::ECN_ECE_SENT && m_congestionControl->GetName () != "TcpDctcp"))
+  if (m_tcb->m_ecnState == TcpSocketState::ECN_CE_RCVD || m_tcb->m_ecnState == TcpSocketState::ECN_ECE_SENT)
     {
       SendEmptyPacket (TcpHeader::ACK | TcpHeader::ECE);
       m_tcb->m_ecnState = TcpSocketState::ECN_ECE_SENT;
@@ -3754,7 +3753,7 @@ TcpSocketBase::SetRcvBufSize (uint32_t size)
    */
   if (oldSize < size && m_connected)
     {
-      if (m_tcb->m_ecnState == TcpSocketState::ECN_CE_RCVD || (m_tcb->m_ecnState == TcpSocketState::ECN_ECE_SENT && m_congestionControl->GetName () != "TcpDctcp"))
+      if (m_tcb->m_ecnState == TcpSocketState::ECN_CE_RCVD || m_tcb->m_ecnState == TcpSocketState::ECN_ECE_SENT)
         {
           SendEmptyPacket (TcpHeader::ACK | TcpHeader::ECE);
           m_tcb->m_ecnState = TcpSocketState::ECN_ECE_SENT;
@@ -4220,12 +4219,6 @@ TcpSocketBase::SetEcn()
   m_ecn = true;
 }
 
-void
-TcpSocketBase::SetDctcp()
-{
-  m_dctcp = true;
-  SetEcn();
-}
 
 //RttHistory methods
 RttHistory::RttHistory (SequenceNumber32 s, uint32_t c, Time t)

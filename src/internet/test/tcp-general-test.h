@@ -583,7 +583,7 @@ protected:
    *
    * \param who socket to force
    */
-  void SetDctcp (SocketWho who);
+  //void SetDctcp (SocketWho who);
 
   /**
    * \brief Forcefully set the initial ssth

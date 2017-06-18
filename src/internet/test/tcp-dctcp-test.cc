@@ -1,23 +1,3 @@
-/* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
-/*
- * Copyright (c) 2016 NITK Surathkal
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 2 as
- * published by the Free Software Foundation;
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
- *
- * Authors: Shravya Ks <shravya.ks0@gmail.com>
- *
- */
 #include "ns3/ipv4.h"
 #include "ns3/ipv6.h"
 #include "ns3/ipv4-interface-address.h"
@@ -33,61 +13,142 @@
 #include "tcp-error-model.h"
 #include "ns3/tcp-l4-protocol.h"
 #include "ns3/tcp-dctcp.h"
+#include "ns3/string.h"
 
-namespace ns3 {
+using namespace ns3;
 
 NS_LOG_COMPONENT_DEFINE ("TcpDctcpTestSuite");
-/**
- * \ingroup internet-test
- * \ingroup tests
- *
- * \brief checks if ECT, CWR and ECE bits are set correctly in different scenarios
- *
- * This test suite will run four combinations of enabling ECN (sender off and receiver off; sender on and sender off;
- * sender off and receiver on; sender on and receiver on;) and checks that the TOS byte of eventual packets transmitted
- * or received have ECT, CWR, and ECE set correctly (or not). It also checks if congestion window is being reduced by half
- * only once per every window on receipt of ECE flags
- *
- */
-class TcpDctcpTest : public TcpGeneralTest
+
+
+class TcpDctcpCodePointsTest : public TcpGeneralTest
 {
 public:
   /**
    * \brief Constructor
    *
-   * \param testcase test case number
-   * \param desc Description about the ECN capabilities of sender and reciever
+   * \param desc Description about the test
    */
-  TcpDctcpTest (uint32_t testcase, const std::string &desc);
+  TcpDctcpCodePointsTest (uint8_t testCase, const std::string &desc);
 
 protected:
-  virtual void CWndTrace (uint32_t oldValue, uint32_t newValue);
-  virtual void Rx (const Ptr<const Packet> p, const TcpHeader&h, SocketWho who);
   virtual void Tx (const Ptr<const Packet> p, const TcpHeader&h, SocketWho who);
+  virtual void Rx (const Ptr<const Packet> p, const TcpHeader&h, SocketWho who);
   virtual Ptr<TcpSocketMsgBase> CreateSenderSocket (Ptr<Node> node);
   virtual Ptr<TcpSocketMsgBase> CreateReceiverSocket (Ptr<Node> node);
   void ConfigureProperties ();
 
 private:
-  uint32_t m_cwndChangeCount;
   uint32_t m_senderSent;
   uint32_t m_receiverSent;
   uint32_t m_senderReceived;
-  uint32_t m_receiverReceived;
-  uint32_t m_testcase;
+  uint8_t m_testCase;
 };
 
+TcpDctcpCodePointsTest::TcpDctcpCodePointsTest (uint8_t testCase, const std::string &desc)
+  : TcpGeneralTest (desc),
+    m_senderSent (0),
+    m_receiverSent (0),
+    m_senderReceived(0),
+    m_testCase(testCase)
+{
+}
+
+void
+TcpDctcpCodePointsTest::Tx (const Ptr<const Packet> p, const TcpHeader &h, SocketWho who)
+{
+  if (who == SENDER && (m_testCase == 1 || m_testCase ==2))
+    {
+      m_senderSent++;
+      SocketIpTosTag ipTosTag;
+      p->PeekPacketTag (ipTosTag);
+      if (m_testCase == 1)
+        {
+          if (m_senderSent == 1)
+            {
+              NS_TEST_ASSERT_MSG_EQ ((ipTosTag.GetTos ()), 0x2, "IP TOS should have ECT for SYN packet for DCTCP");
+            }
+          if (m_senderSent == 3)
+            {
+              NS_TEST_ASSERT_MSG_EQ ((ipTosTag.GetTos ()), 0x2, "IP TOS should have ECT for data packets for DCTCP");
+            }
+        }
+     else
+       {
+         if (m_senderSent == 1)
+           {
+             NS_TEST_ASSERT_MSG_NE ((ipTosTag.GetTos ()), 0x2, "IP TOS should not have ECT for SYN packet for non-DCTCP");
+           }
+         if (m_senderSent == 3)
+           {
+             NS_TEST_ASSERT_MSG_EQ ((ipTosTag.GetTos ()), 0x2, "IP TOS should have ECT for data packets for non-DCTCP but ECN enabled traffic");
+           }
+       }
+    }
+  else if (who == RECEIVER && (m_testCase == 1 || m_testCase ==2))
+   {
+     m_receiverSent++;
+     SocketIpTosTag ipTosTag;
+     p->PeekPacketTag (ipTosTag);
+     if (m_testCase == 1)
+        {
+          if (m_receiverSent == 1)
+            {
+              NS_TEST_ASSERT_MSG_EQ ((ipTosTag.GetTos ()), 0x2, "IP TOS should have ECT for SYN+ACK packet for DCTCP");
+            }
+          if (m_receiverSent == 2)
+            {
+              NS_TEST_ASSERT_MSG_EQ ((ipTosTag.GetTos ()), 0x2, "IP TOS should have ECT for pure ACK packets for DCTCP");
+            }
+        }
+     else
+       {
+         if (m_receiverSent == 1)
+           {
+             NS_TEST_ASSERT_MSG_NE ((ipTosTag.GetTos ()), 0x2, "IP TOS should not have ECT for SYN+ACK packet for non-DCTCP");
+           }
+         if (m_receiverSent == 2)
+           {
+             NS_TEST_ASSERT_MSG_NE ((ipTosTag.GetTos ()), 0x2, "IP TOS should not have ECT for pure ACK packets for non-DCTCP");
+           }
+       }
+   }        
+}
+
+
+void
+TcpDctcpCodePointsTest::Rx (const Ptr<const Packet> p, const TcpHeader &h, SocketWho who)
+{
+  if (who == SENDER && m_testCase == 3)
+    {
+      m_senderReceived++;
+      if (m_senderReceived == 2 && m_testCase == 3)
+        {
+          NS_TEST_ASSERT_MSG_NE (((h.GetFlags ()) & TcpHeader::ECE), 0, "The flag ECE should be set in TCP header of the packet sent by the receiver when it receives a packet with CE bit set in IP header");
+        }
+      if (m_senderReceived > 2 && m_testCase == 3)
+        {
+          NS_TEST_ASSERT_MSG_EQ (((h.GetFlags ()) & TcpHeader::ECE), 0, "The flag ECE should be not be set in TCP header of the packet sent by the receiver even if sender doesn't send CWR flags to receiver if it receives a packet without CE bit set in IP header");
+        }
+    }
+}
+
+void
+TcpDctcpCodePointsTest::ConfigureProperties ()
+{
+  TcpGeneralTest::ConfigureProperties ();
+  SetEcn (SENDER);
+  SetEcn (RECEIVER);
+}
 
 /**
  * \ingroup internet-test
  * \ingroup tests
  *
- * \brief A TCP socket which sends certain data packets with CE flags set for tests 5 and 6.
+ * \brief A TCP socket which sends certain data packets with CE flags set for test 3.
  *
- * The SendDataPacket function of this class sends data packets numbered 1 and 2 with CE flags set
- * for test 5 to verify if ECE and CWR bits are correctly set by receiver and sender respectively. It
- * also sets CE flags on data packets 10 and 11 in test case 6 to check if sender reduces congestion window
- * by half and also only once per every window.
+ * The SendDataPacket function of this class sends data packet numbered 1  with CE flags set and also doesn't set 
+ * CWR flags on receipt of ECE flags for test 3. This is done to verify that DCTCP receiver sends ECE only if it 
+ * receives CE inspite of sender not sending CWR flags for ECE
  *
  */
 class TcpDctcpCongestedRouter : public TcpSocketMsgBase
@@ -100,7 +161,7 @@ public:
   static TypeId GetTypeId (void);
 
   uint32_t m_dataPacketSent;
-  uint8_t m_testcase;
+  uint8_t m_testCase;
 
   TcpDctcpCongestedRouter ()
     : TcpSocketMsgBase ()
@@ -117,8 +178,7 @@ public:
   {
   }
 
-  void SetTestCase (uint8_t testCase);
-
+ void SetTestCase (uint8_t testCase);
 protected:
   virtual uint32_t SendDataPacket (SequenceNumber32 seq, uint32_t maxSize, bool withAck);
   virtual void ReTxTimeout ();
@@ -147,7 +207,7 @@ TcpDctcpCongestedRouter::ReTxTimeout ()
 void
 TcpDctcpCongestedRouter::SetTestCase (uint8_t testCase)
 {
-  m_testcase = testCase;
+  m_testCase = testCase;
 }
 
 uint32_t
@@ -173,8 +233,8 @@ TcpDctcpCongestedRouter::SendDataPacket (SequenceNumber32 seq, uint32_t maxSize,
       m_delAckCount = 0;
     }
 
-  // For test 2, we don't send CWR flags on receipt of ECE to check if Receiver sends ECE only when there is CE flags 
-  if (m_tcb->m_ecnState == TcpSocketState::ECN_ECE_RCVD && m_ecnEchoSeq.Get () > m_ecnCWRSeq.Get () && !isRetransmission && m_testcase != 2)
+  // For test 3, we don't send CWR flags on receipt of ECE to check if Receiver sends ECE only when there is CE flags 
+  if (m_tcb->m_ecnState == TcpSocketState::ECN_ECE_RCVD && m_ecnEchoSeq.Get () > m_ecnCWRSeq.Get () && !isRetransmission && m_testCase != 3)
     {
       NS_LOG_INFO ("Backoff mechanism by reducing CWND  by half because we've received ECN Echo");
       m_tcb->m_ssThresh = m_congestionControl->GetSsThresh (m_tcb, BytesInFlight ());
@@ -202,11 +262,7 @@ TcpDctcpCongestedRouter::SendDataPacket (SequenceNumber32 seq, uint32_t maxSize,
       SocketIpTosTag ipTosTag;
 
       NS_LOG_LOGIC (" ECT bits should not be set on retransmitted packets ");
-      if ( m_testcase == 2 && (m_dataPacketSent == 2 ) && !isRetransmission )
-        {
-          ipTosTag.SetTos (GetIpTos () | 0x3);
-        }
-      else if ( m_testcase == 3 &&  ( m_dataPacketSent == 10 || m_dataPacketSent == 11 )  && !isRetransmission )
+      if (m_testCase == 3 && m_dataPacketSent == 1  && !isRetransmission)
         {
           ipTosTag.SetTos (GetIpTos () | 0x3);
         }
@@ -226,11 +282,7 @@ TcpDctcpCongestedRouter::SendDataPacket (SequenceNumber32 seq, uint32_t maxSize,
   else
     {
       SocketIpTosTag ipTosTag;
-      if ( m_testcase == 2 && (m_dataPacketSent == 2  )  && !isRetransmission)
-        {
-          ipTosTag.SetTos (0x3);
-        }
-      else if ( m_testcase == 3 && ( m_dataPacketSent == 10 || m_dataPacketSent == 11 )  && !isRetransmission )
+      if (m_testCase == 3 && m_dataPacketSent == 1 && !isRetransmission)
         {
           ipTosTag.SetTos (0x3);
         }
@@ -247,11 +299,7 @@ TcpDctcpCongestedRouter::SendDataPacket (SequenceNumber32 seq, uint32_t maxSize,
   if (IsManualIpv6Tclass ())
     {
       SocketIpv6TclassTag ipTclassTag;
-      if ( m_testcase == 2 && (m_dataPacketSent == 2)  && !isRetransmission )
-        {
-          ipTclassTag.SetTclass (GetIpv6Tclass () | 0x3);
-        }
-      else if ( m_testcase == 3 && ( m_dataPacketSent == 10 || m_dataPacketSent == 11 )  && !isRetransmission)
+      if (m_testCase == 3 && m_dataPacketSent == 1 && !isRetransmission )
         {
           ipTclassTag.SetTclass (GetIpv6Tclass () | 0x3);
         }
@@ -271,11 +319,7 @@ TcpDctcpCongestedRouter::SendDataPacket (SequenceNumber32 seq, uint32_t maxSize,
   else
     {
       SocketIpv6TclassTag ipTclassTag;
-      if ( m_testcase == 2 && (m_dataPacketSent == 2)  && !isRetransmission)
-        {
-          ipTclassTag.SetTclass (0x3);
-        }
-      else if ( m_testcase == 3 &&( m_dataPacketSent == 10 || m_dataPacketSent == 11 )  && !isRetransmission)
+      if (m_testCase == 3 && m_dataPacketSent == 1 && !isRetransmission)
         {
           ipTclassTag.SetTclass (0x3);
         }
@@ -390,133 +434,20 @@ TcpDctcpCongestedRouter::Fork (void)
   return CopyObject<TcpDctcpCongestedRouter> (this);
 }
 
-
-TcpDctcpTest::TcpDctcpTest (uint32_t testcase, const std::string &desc)
-  : TcpGeneralTest (desc),
-    m_cwndChangeCount (0),
-    m_senderSent (0),
-    m_receiverSent (0),
-    m_senderReceived (0),
-    m_receiverReceived (0),
-    m_testcase (testcase)
-{
-}
-
-void
-TcpDctcpTest::ConfigureProperties ()
-{
-  TcpGeneralTest::ConfigureProperties ();
-  //SetDctcp (SENDER);
-  //SetDctcp (RECEIVER);
-  SetEcn (SENDER);
-  SetEcn (RECEIVER);
-}
-
-void
-TcpDctcpTest::CWndTrace (uint32_t oldValue, uint32_t newValue)
-{
-  if (m_testcase == 3)
-    {
-      uint32_t increase = newValue - oldValue;
-      if ( increase < 0)
-        {
-          m_cwndChangeCount++;
-          NS_TEST_ASSERT_MSG_EQ (m_cwndChangeCount, 1, "Congestion window should be reduced once per every window");
-          NS_TEST_ASSERT_MSG_EQ (newValue, oldValue / 2, "Congestion window should be reduced by half");
-        }
-    }
-}
-
-void
-TcpDctcpTest::Rx (const Ptr<const Packet> p, const TcpHeader &h, SocketWho who)
-{
-  if (who == RECEIVER)
-    {
-      if (m_receiverReceived == 0)
-        {
-          NS_TEST_ASSERT_MSG_NE (((h.GetFlags ()) & TcpHeader::SYN), 0, "SYN should be received as first message at the receiver");
-          NS_TEST_ASSERT_MSG_NE (((h.GetFlags ()) & TcpHeader::ECE) && ((h.GetFlags ()) & TcpHeader::CWR), 0, "The flags ECE + CWR should be set in the TCP header of first message receieved at receiver when sender is DCTCP Capable");
-        }
-      else if (m_receiverReceived == 1)
-        {
-          NS_TEST_ASSERT_MSG_NE (((h.GetFlags ()) & TcpHeader::ACK), 0, "ACK should be received as second message at receiver");
-        }
-    
-      m_receiverReceived++;
-    }
-  else if (who == SENDER)
-    {
-      if (m_senderReceived == 0)
-        {
-          NS_TEST_ASSERT_MSG_NE (((h.GetFlags ()) & TcpHeader::SYN) && ((h.GetFlags ()) & TcpHeader::ACK), 0, "SYN+ACK received as first message at sender");
-          NS_TEST_ASSERT_MSG_NE (((h.GetFlags ()) & TcpHeader::ECE), 0, "The flag ECE should be set in the TCP header of first message receieved at sender when both receiver and sender are DCTCP Capable");
-         } 
-      if ((m_senderReceived == 3) && m_testcase == 2)
-        {
-          NS_TEST_ASSERT_MSG_NE (((h.GetFlags ()) & TcpHeader::ECE), 0, "The flag ECE should be set in TCP header of the packet sent by the receiver when it receives a packet with CE bit set in IP header");
-        }
-      if (m_senderReceived == 5 && m_testcase == 2)
-        {
-          NS_TEST_ASSERT_MSG_EQ (((h.GetFlags ()) & TcpHeader::ECE), 0, "The flag ECE should be not be set in TCP header of the packet sent by the receiver even if sender doesn't send CWR flags to receiver if it receives a packet without CE bit set in IP header");
-        }
-     /* if ( m_testcase == 5 && m_receiverReceived > 12)
-        {
-          NS_TEST_ASSERT_MSG_EQ (((h.GetFlags ()) & TcpHeader::ECE), 0, "The flag ECE should not be set in TCP header of the packet sent by the receiver after sender sends CWR flags to receiver and receiver receives a packet without CE bit set in IP header");
-        }*/
-      m_senderReceived++;
-    }
-}
-
-void
-TcpDctcpTest::Tx (const Ptr<const Packet> p, const TcpHeader &h, SocketWho who)
-{
-  if (who == SENDER)
-    {
-      m_senderSent++;
-    
-      if(m_testcase == 1)
-       {
-         SocketIpTosTag ipTosTag;
-         p->PeekPacketTag (ipTosTag);
-         if (m_senderSent == 1)
-           {
-             NS_TEST_ASSERT_MSG_EQ ((ipTosTag.GetTos ()), 0x2, "IP TOS should have ECT for SYN packet for DCTCP");
-           }
-         if (m_senderSent == 2)
-           {
-             NS_TEST_ASSERT_MSG_EQ ((ipTosTag.GetTos ()), 0x2, "IP TOS should have ECT for data packets for DCTCP");
-           }
-        }
-     }
-  else
-   {
-     m_receiverSent++;
-     if(m_testcase == 1)
-       {
-         SocketIpTosTag ipTosTag;
-         p->PeekPacketTag (ipTosTag);
-         if (m_receiverSent == 1)
-           {
-             NS_TEST_ASSERT_MSG_EQ ((ipTosTag.GetTos ()), 0x2, "IP TOS should have ECT for SYN+ACK packet for DCTCP");
-           }
-         if (m_receiverSent == 2)
-           {
-             NS_TEST_ASSERT_MSG_EQ ((ipTosTag.GetTos ()), 0x2, "IP TOS should have ECT for pure ACK packet for DCTCP");
-           }
-        }
-    }        
-}
-
 Ptr<TcpSocketMsgBase>
-TcpDctcpTest::CreateSenderSocket (Ptr<Node> node)
+TcpDctcpCodePointsTest::CreateSenderSocket (Ptr<Node> node)
 {
-  if (m_testcase == 2 || m_testcase == 3)
+  if(m_testCase == 2)
+    {
+      return TcpGeneralTest::CreateSenderSocket(node);
+    } 
+  else if (m_testCase == 3)
     {
       Ptr<TcpDctcpCongestedRouter> socket = DynamicCast<TcpDctcpCongestedRouter> (
           CreateSocket (node,
                         TcpDctcpCongestedRouter::GetTypeId (),
                         TcpDctcp::GetTypeId ()));
-      socket->SetTestCase (m_testcase);
+      socket->SetTestCase (m_testCase);
       return socket;
     }
   else
@@ -526,29 +457,210 @@ TcpDctcpTest::CreateSenderSocket (Ptr<Node> node)
 }
 
 Ptr<TcpSocketMsgBase>
-TcpDctcpTest::CreateReceiverSocket (Ptr<Node> node)
+TcpDctcpCodePointsTest::CreateReceiverSocket (Ptr<Node> node)
 {
-   return TcpGeneralTest::CreateSocket (node, TcpSocketMsgBase::GetTypeId (), TcpDctcp::GetTypeId ());
+   if(m_testCase == 2)
+     {
+       return TcpGeneralTest::CreateReceiverSocket(node);  
+     }
+   else
+     {
+       return TcpGeneralTest::CreateSocket (node, TcpSocketMsgBase::GetTypeId (), TcpDctcp::GetTypeId ());
+     }
 }
 
 /**
  * \ingroup internet-test
  * \ingroup tests
  *
- * \brief TCP ECN TestSuite
+ * \brief DCTCP should be same as NewReno during slow start
  */
-static class TcpDctcpTestSuite : public TestSuite
+class TcpDctcpToNewReno : public TestCase
+{
+public:
+  /**
+   * \brief Constructor
+   *
+   * \param cWnd congestion window
+   * \param segmentSize segment size
+   * \param ssThresh slow start threshold
+   * \param segmentsAcked segments acked
+   * \param highTxMark high tx mark
+   * \param lastAckedSeq last acked seq
+   * \param rtt RTT
+   * \param name Name of the test
+   */
+  TcpDctcpToNewReno (uint32_t cWnd, uint32_t segmentSize, uint32_t ssThresh,
+                      uint32_t segmentsAcked, SequenceNumber32 highTxMark,
+                      SequenceNumber32 lastAckedSeq, Time rtt, const std::string &name);
+
+private:
+  virtual void DoRun (void);
+  /** \brief Execute the test
+   */
+  void ExecuteTest (void);
+
+  uint32_t m_cWnd; //!< cWnd
+  uint32_t m_segmentSize; //!< segment size
+  uint32_t m_segmentsAcked; //!< segments acked
+  uint32_t m_ssThresh; //!< ss thresh
+  Time m_rtt; //!< rtt
+  SequenceNumber32 m_highTxMark; //!< high tx mark
+  SequenceNumber32 m_lastAckedSeq; //!< last acked seq
+  Ptr<TcpSocketState> m_state; //!< state
+};
+
+TcpDctcpToNewReno::TcpDctcpToNewReno (uint32_t cWnd, uint32_t segmentSize, uint32_t ssThresh,
+                                        uint32_t segmentsAcked, SequenceNumber32 highTxMark,
+                                        SequenceNumber32 lastAckedSeq, Time rtt, const std::string &name)
+  : TestCase (name),
+    m_cWnd (cWnd),
+    m_segmentSize (segmentSize),
+    m_segmentsAcked (segmentsAcked),
+    m_ssThresh (ssThresh),
+    m_rtt (rtt),
+    m_highTxMark (highTxMark),
+    m_lastAckedSeq (lastAckedSeq)
+{
+}
+
+void
+TcpDctcpToNewReno::DoRun ()
+{
+  Simulator::Schedule (Seconds (0.0), &TcpDctcpToNewReno::ExecuteTest, this);
+  Simulator::Run ();
+  Simulator::Destroy ();
+}
+
+void
+TcpDctcpToNewReno::ExecuteTest ()
+{
+  m_state = CreateObject <TcpSocketState> ();
+  m_state->m_cWnd = m_cWnd;
+  m_state->m_ssThresh = m_ssThresh;
+  m_state->m_segmentSize = m_segmentSize;
+  m_state->m_highTxMark = m_highTxMark;
+  m_state->m_lastAckedSeq = m_lastAckedSeq;
+
+  Ptr<TcpSocketState> state = CreateObject <TcpSocketState> ();
+  state->m_cWnd = m_cWnd;
+  state->m_ssThresh = m_ssThresh;
+  state->m_segmentSize = m_segmentSize;
+  state->m_highTxMark = m_highTxMark;
+  state->m_lastAckedSeq = m_lastAckedSeq;
+
+  Ptr<TcpDctcp> cong = CreateObject <TcpDctcp> ();
+  cong->IncreaseWindow (m_state, m_segmentsAcked);
+
+  Ptr<TcpNewReno> NewRenoCong = CreateObject <TcpNewReno> ();
+  NewRenoCong->IncreaseWindow (state, m_segmentsAcked);
+
+  NS_TEST_ASSERT_MSG_EQ (m_state->m_cWnd.Get (), state->m_cWnd.Get (),
+                         "cWnd has not updated correctly");
+}
+/**
+ * \ingroup internet-test
+ * \ingroup tests
+ *
+ * \brief Test to validate cWnd decrement Dctcp
+ */
+class TcpDctcpDecrementTest : public TestCase
+{
+public:
+  /**
+   * \brief Constructor
+   *
+   * \param cWnd congestion window
+   * \param segmentSize segment size
+   * \param segmentsAcked segments acked
+   * \param highTxMark high tx mark
+   * \param lastAckedSeq last acked seq
+   * \param rtt RTT
+   * \param name Name of the test
+   */
+  TcpDctcpDecrementTest (uint32_t cWnd, uint32_t segmentSize, uint32_t segmentsAcked, SequenceNumber32 nextTxSequence,
+                          SequenceNumber32 lastAckedSeq, Time rtt, const std::string &name);
+
+private:
+  virtual void DoRun (void);
+  /** \brief Execute the test
+   */
+  void ExecuteTest (void);
+
+  uint32_t m_cWnd; //!< cWnd
+  uint32_t m_segmentSize; //!< segment size
+  uint32_t m_segmentsAcked; //!< segments acked
+  Time m_rtt; //!< rtt
+  SequenceNumber32 m_nextTxSequence; //!< next seq num to be sent
+  SequenceNumber32 m_lastAckedSeq; //!< last acked seq
+  Ptr<TcpSocketState> m_state; //!< state
+};
+
+TcpDctcpDecrementTest::TcpDctcpDecrementTest (uint32_t cWnd, uint32_t segmentSize, uint32_t segmentsAcked, SequenceNumber32 nextTxSequence,
+                                                SequenceNumber32 lastAckedSeq, Time rtt, const std::string &name)
+  : TestCase (name),
+    m_cWnd (cWnd),
+    m_segmentSize (segmentSize),
+    m_segmentsAcked (segmentsAcked),
+    m_rtt (rtt),
+    m_nextTxSequence (nextTxSequence),
+    m_lastAckedSeq (lastAckedSeq)
+{
+}
+
+void
+TcpDctcpDecrementTest::DoRun ()
+{
+  Simulator::Schedule (Seconds (0.0), &TcpDctcpDecrementTest::ExecuteTest, this);
+  Simulator::Run ();
+  Simulator::Destroy ();
+}
+
+void
+TcpDctcpDecrementTest::ExecuteTest (void)
+{
+  m_state = CreateObject <TcpSocketState> ();
+  m_state->m_cWnd = m_cWnd;
+  m_state->m_segmentSize = m_segmentSize;
+  m_state->m_nextTxSequence = m_nextTxSequence;
+  m_state->m_lastAckedSeq = m_lastAckedSeq;
+
+  Ptr<TcpDctcp> cong = CreateObject <TcpDctcp> ();
+  m_state->m_ecnState = TcpSocketState::ECN_IDLE;
+  cong->PktsAcked (m_state, m_segmentsAcked, m_rtt);
+  cong->ReduceCwnd (m_state);
+  NS_TEST_ASSERT_MSG_EQ (m_state->m_cWnd.Get (), m_cWnd,
+                         "cWnd has updated correctly");
+
+  m_state->m_ecnState = TcpSocketState::ECN_ECE_RCVD;
+  cong->PktsAcked (m_state, m_segmentsAcked, m_rtt);
+  cong->ReduceCwnd (m_state);
+
+  uint32_t val = (uint32_t)(m_cWnd * (1 - 0.0625/2.0));
+  NS_TEST_ASSERT_MSG_EQ (m_state->m_cWnd.Get (), val,
+                         "cWnd has updated correctly");
+  
+}
+
+/**
+ * \ingroup internet-test
+ * \ingroup tests
+ *
+ * \brief TCP Dctcp TestSuite
+ */
+class TcpDctcpTestSuite : public TestSuite
 {
 public:
   TcpDctcpTestSuite () : TestSuite ("tcp-dctcp-test", UNIT)
   {
-    AddTestCase (new TcpDctcpTest (1, "ECT Test : Check if ECT is set on Syn, Syn+ Ack"),
+    AddTestCase (new TcpDctcpCodePointsTest (1, "ECT Test : Check if ECT is set on Syn, Syn+ Ack, Ack and Data packets for DCTCP packets"),
                  TestCase::QUICK);
-    AddTestCase (new TcpDctcpTest (2, "ECE Functionality Test: ECE should only be sent by reciever when it receives CE flags"),
+    AddTestCase (new TcpDctcpCodePointsTest (2, "ECT Test : Check if ECT is not set on Syn, Syn+ Ack and Ack but set on Data packets for non-DCTCP but ECN enabled traffic"),TestCase::QUICK);
+    AddTestCase (new TcpDctcpCodePointsTest (3, "ECE Functionality Test: ECE should only be sent by reciever when it receives CE flags"),
                  TestCase::QUICK);
-    AddTestCase (new TcpDctcpTest (3, "Congestion Window Reduction Test :ECN capable sender and ECN capable receiver"),
-                 TestCase::QUICK);
-  }
-} g_tcpDctcpTestSuite;
+    AddTestCase (new TcpDctcpToNewReno (2 * 1446, 1446, 4 * 1446, 2, SequenceNumber32 (4753), SequenceNumber32 (3216), MilliSeconds (100), "DCTCP falls to New Reno for slowstart"), TestCase::QUICK);
+    AddTestCase (new TcpDctcpDecrementTest (4 * 1446, 1446, 2, SequenceNumber32 (3216), SequenceNumber32 (4753), MilliSeconds (100), "DCTCP decrement test"), TestCase::QUICK);
+ }
+};
 
-} // namespace ns3
+static TcpDctcpTestSuite g_tcpdctcpTest; //!< static var for test initialization

@@ -72,7 +72,9 @@ void
 TcpDctcp::SetSocketBase (Ptr<TcpSocketBase> tsb)
 {
   m_tsb = tsb;
+  m_tsb->SetEcn();
 }
+
 Ptr<TcpCongestionOps> TcpDctcp::Fork (void)
 {
   NS_LOG_FUNCTION (this);

@@ -920,7 +920,7 @@ TcpGeneralTest::SetEcn (SocketWho who)
     }
 }
 
-void 
+/*void 
 TcpGeneralTest::SetDctcp (SocketWho who)
 {
   if (who == SENDER)
@@ -935,7 +935,7 @@ TcpGeneralTest::SetDctcp (SocketWho who)
     {
       NS_FATAL_ERROR ("Not defined");
     }
-}
+}*/
 
 void
 TcpGeneralTest::SetInitialSsThresh (SocketWho who, uint32_t initialSsThresh)
