@@ -25,7 +25,7 @@
 #include "ns3/tcp-congestion-ops.h"
 
 namespace ns3 {
- 
+
 /**
  * \ingroup congestionOps
  *
@@ -51,12 +51,12 @@ public:
    * \param sock the object to copy
    */
   TcpDctcp (const TcpDctcp& sock);
-  
+
   /**
    * \brief Destructor
    */
   virtual ~TcpDctcp (void);
- 
+
   /**
    * \brief Get the name of the TCP flavour
    *
@@ -67,11 +67,11 @@ public:
   /**
    * \brief Set the associated TCP Socket Base
    *
-   * \param tsb the TCP Socket Base 
+   * \param tsb the TCP Socket Base
    */
   virtual void SetSocketBase (Ptr<TcpSocketBase> tsb);
   virtual Ptr<TcpCongestionOps> Fork ();
- 
+
   /**
    * \brief Adjust cwnd following DCTCP algorithm
    *
@@ -93,7 +93,7 @@ public:
    *
    * \param tcb internal state
    * \param event congestion window event which triggered this function
-   */ 
+   */
   virtual void CwndEvent (Ptr<TcpSocketState> tcb,
                           const TcpSocketState::TcpCaEvent_t event);
 
@@ -105,7 +105,7 @@ private:
    * \param tcb internal congestion state
    */
   void CEState0to1 (Ptr<TcpSocketState> tcb);
-  
+
   /**
    * \brief Changes state of m_ceState to 0
    *
@@ -127,8 +127,8 @@ private:
    *
    * \param tcb internal congestion state
    */
-  void Reset(Ptr<TcpSocketState> tcb);
- 
+  void Reset (Ptr<TcpSocketState> tcb);
+
   /**
    * \brief Sets the value of m_dctcpAlpha
    *
@@ -142,11 +142,11 @@ private:
   SequenceNumber32 m_priorRcvNxt;       //Seqnum of the first missing byte in data
   bool m_priorRcvNxtFlag;               //Variable used in setting the value of m_priorRcvNxt for first time
   double m_dctcpAlpha;                  //Parameter used to estimate fraction of sent bytes that encountered congestion
-  SequenceNumber32 m_nextSeq;           //TCP sequence number threshold for beginning a new observation window 
+  SequenceNumber32 m_nextSeq;           //TCP sequence number threshold for beginning a new observation window
   bool m_nextSeqFlag;                   //Variable used in setting the value of m_nextSeq for first time
   uint32_t m_ceState;                   //DCTCP Congestion Experienced state
   bool m_delayedAckReserved;            //Delayed Ack state
-  double m_dctcpShiftG;                 //Estimation gain 
+  double m_dctcpShiftG;                 //Estimation gain
 };
 
 }
