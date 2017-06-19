@@ -76,7 +76,6 @@ public:
    * \brief Adjust cwnd following DCTCP algorithm
    *
    * \param tcb internal congestion state
-   * \param segmentsAcked count of segments ACKed
    */
   virtual void ReduceCwnd (Ptr<TcpSocketState> tcb);
 
@@ -89,7 +88,12 @@ public:
    */
   virtual void PktsAcked (Ptr<TcpSocketState> tcb, uint32_t segmentsAcked,
                           const Time &rtt);
-
+  /**
+   * \brief Trigger events/calculations on occurance congestion window event
+   *
+   * \param tcb internal state
+   * \param event congestion window event which triggered this function
+   */ 
   virtual void CwndEvent (Ptr<TcpSocketState> tcb,
                           const TcpSocketState::TcpCaEvent_t event);
 
@@ -113,7 +117,7 @@ private:
    * \brief Updates the value of m_delayedAckReserved
    *
    * \param tcb internal congestion state
-   * \param event the congestion action event
+   * \param event the congestion window event
    */
   void UpdateAckReserved (Ptr<TcpSocketState> tcb,
                           const TcpSocketState::TcpCaEvent_t event);
