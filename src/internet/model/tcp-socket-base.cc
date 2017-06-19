@@ -4191,7 +4191,6 @@ void
 TcpSocketBase::SetCongestionControlAlgorithm (Ptr<TcpCongestionOps> algo)
 {
   NS_LOG_FUNCTION (this << algo);
-  //algo->SetSocketBase(this);
   m_congestionControl = algo;
   m_congestionControl->SetSocketBase(this);
 }

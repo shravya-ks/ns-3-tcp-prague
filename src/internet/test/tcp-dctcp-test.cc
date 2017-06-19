@@ -40,13 +40,19 @@ using namespace ns3;
 
 NS_LOG_COMPONENT_DEFINE ("TcpDctcpTestSuite");
 
-
+/**
+ * \ingroup internet-test
+ * \ingroup tests
+ *
+ * \brief Validates the setting of ECT and ECE codepoints for DCTCP enabled traffic
+ */
 class TcpDctcpCodePointsTest : public TcpGeneralTest
 {
 public:
   /**
    * \brief Constructor
    *
+   * \param testCase Test case number
    * \param desc Description about the test
    */
   TcpDctcpCodePointsTest (uint8_t testCase, const std::string &desc);
@@ -86,18 +92,18 @@ TcpDctcpCodePointsTest::Tx (const Ptr<const Packet> p, const TcpHeader &h, Socke
         {
           if (m_senderSent == 1)
             {
-              NS_TEST_ASSERT_MSG_EQ ((ipTosTag.GetTos ()), 0x2, "IP TOS should have ECT for SYN packet for DCTCP");
+              NS_TEST_ASSERT_MSG_EQ ((ipTosTag.GetTos ()), 0x2, "IP TOS should have ECT for SYN packet for DCTCP traffic");
             }
           if (m_senderSent == 3)
             {
-              NS_TEST_ASSERT_MSG_EQ ((ipTosTag.GetTos ()), 0x2, "IP TOS should have ECT for data packets for DCTCP");
+              NS_TEST_ASSERT_MSG_EQ ((ipTosTag.GetTos ()), 0x2, "IP TOS should have ECT for data packets for DCTCP traffic");
             }
         }
      else
        {
          if (m_senderSent == 1)
            {
-             NS_TEST_ASSERT_MSG_NE ((ipTosTag.GetTos ()), 0x2, "IP TOS should not have ECT for SYN packet for non-DCTCP");
+             NS_TEST_ASSERT_MSG_NE ((ipTosTag.GetTos ()), 0x2, "IP TOS should not have ECT for SYN packet for DCTCP traffic");
            }
          if (m_senderSent == 3)
            {
@@ -114,22 +120,22 @@ TcpDctcpCodePointsTest::Tx (const Ptr<const Packet> p, const TcpHeader &h, Socke
         {
           if (m_receiverSent == 1)
             {
-              NS_TEST_ASSERT_MSG_EQ ((ipTosTag.GetTos ()), 0x2, "IP TOS should have ECT for SYN+ACK packet for DCTCP");
+              NS_TEST_ASSERT_MSG_EQ ((ipTosTag.GetTos ()), 0x2, "IP TOS should have ECT for SYN+ACK packet for DCTCP traffic");
             }
           if (m_receiverSent == 2)
             {
-              NS_TEST_ASSERT_MSG_EQ ((ipTosTag.GetTos ()), 0x2, "IP TOS should have ECT for pure ACK packets for DCTCP");
+              NS_TEST_ASSERT_MSG_EQ ((ipTosTag.GetTos ()), 0x2, "IP TOS should have ECT for pure ACK packets for DCTCP traffic");
             }
         }
      else
        {
          if (m_receiverSent == 1)
            {
-             NS_TEST_ASSERT_MSG_NE ((ipTosTag.GetTos ()), 0x2, "IP TOS should not have ECT for SYN+ACK packet for non-DCTCP");
+             NS_TEST_ASSERT_MSG_NE ((ipTosTag.GetTos ()), 0x2, "IP TOS should not have ECT for SYN+ACK packet for non-DCTCP traffic");
            }
          if (m_receiverSent == 2)
            {
-             NS_TEST_ASSERT_MSG_NE ((ipTosTag.GetTos ()), 0x2, "IP TOS should not have ECT for pure ACK packets for non-DCTCP");
+             NS_TEST_ASSERT_MSG_NE ((ipTosTag.GetTos ()), 0x2, "IP TOS should not have ECT for pure ACK packets for non-DCTCP traffic");
            }
        }
    }        
@@ -148,7 +154,7 @@ TcpDctcpCodePointsTest::Rx (const Ptr<const Packet> p, const TcpHeader &h, Socke
         }
       if (m_senderReceived > 2 && m_testCase == 3)
         {
-          NS_TEST_ASSERT_MSG_EQ (((h.GetFlags ()) & TcpHeader::ECE), 0, "The flag ECE should be not be set in TCP header of the packet sent by the receiver even if sender doesn't send CWR flags to receiver if it receives a packet without CE bit set in IP header");
+          NS_TEST_ASSERT_MSG_EQ (((h.GetFlags ()) & TcpHeader::ECE), 0, "The flag ECE should be not be set in TCP header of the packet sent by the receiver if it receives a packet without CE bit set in IP header inspite of Sender not sending CWR flags to it");
         }
     }
 }
@@ -165,7 +171,7 @@ TcpDctcpCodePointsTest::ConfigureProperties ()
  * \ingroup internet-test
  * \ingroup tests
  *
- * \brief A TCP socket which sends certain data packets with CE flags set for test 3.
+ * \brief A TCP socket which sends a data packet with CE flags set for test 3.
  *
  * The SendDataPacket function of this class sends data packet numbered 1  with CE flags set and also doesn't set 
  * CWR flags on receipt of ECE flags for test 3. This is done to verify that DCTCP receiver sends ECE only if it 
@@ -583,7 +589,7 @@ TcpDctcpToNewReno::ExecuteTest ()
  * \ingroup internet-test
  * \ingroup tests
  *
- * \brief Test to validate cWnd decrement Dctcp
+ * \brief Test to validate cWnd decrement DCTCP
  */
 class TcpDctcpDecrementTest : public TestCase
 {
@@ -667,16 +673,16 @@ TcpDctcpDecrementTest::ExecuteTest (void)
  * \ingroup internet-test
  * \ingroup tests
  *
- * \brief TCP Dctcp TestSuite
+ * \brief TCP DCTCP TestSuite
  */
 class TcpDctcpTestSuite : public TestSuite
 {
 public:
   TcpDctcpTestSuite () : TestSuite ("tcp-dctcp-test", UNIT)
   {
-    AddTestCase (new TcpDctcpCodePointsTest (1, "ECT Test : Check if ECT is set on Syn, Syn+ Ack, Ack and Data packets for DCTCP packets"),
+    AddTestCase (new TcpDctcpCodePointsTest (1, "ECT Test : Check if ECT is set on Syn, Syn+Ack, Ack and Data packets for DCTCP packets"),
                  TestCase::QUICK);
-    AddTestCase (new TcpDctcpCodePointsTest (2, "ECT Test : Check if ECT is not set on Syn, Syn+ Ack and Ack but set on Data packets for non-DCTCP but ECN enabled traffic"),TestCase::QUICK);
+    AddTestCase (new TcpDctcpCodePointsTest (2, "ECT Test : Check if ECT is not set on Syn, Syn+Ack and Ack but set on Data packets for non-DCTCP but ECN enabled traffic"),TestCase::QUICK);
     AddTestCase (new TcpDctcpCodePointsTest (3, "ECE Functionality Test: ECE should only be sent by reciever when it receives CE flags"),
                  TestCase::QUICK);
     AddTestCase (new TcpDctcpToNewReno (2 * 1446, 1446, 4 * 1446, 2, SequenceNumber32 (4753), SequenceNumber32 (3216), MilliSeconds (100), "DCTCP falls to New Reno for slowstart"), TestCase::QUICK);
