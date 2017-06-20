@@ -145,7 +145,7 @@ private:
   bool m_nextSeqFlag;                   //!< Variable used in setting the value of m_nextSeq for first time
   bool m_ceState;                       //!< DCTCP Congestion Experienced state
   bool m_delayedAckReserved;            //!< Delayed Ack state
-  double m_dctcpShiftG;                 //!< Estimation gain
+  double m_dctcpG;                      //!< Estimation gain
 };
 
 } // namespace ns3

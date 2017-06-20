@@ -46,7 +46,7 @@ TypeId TcpDctcp::GetTypeId (void)
     .AddAttribute ("DctcpShiftG",
                    "Parameter G for updating dctcp_alpha",
                    DoubleValue (0.0625),
-                   MakeDoubleAccessor (&TcpDctcp::m_dctcpShiftG),
+                   MakeDoubleAccessor (&TcpDctcp::m_dctcpG),
                    MakeDoubleChecker<double> (0))
     .AddAttribute ("DctcpAlphaOnInit",
                    "Parameter for initial alpha value",
@@ -92,6 +92,7 @@ TcpDctcp::~TcpDctcp (void)
 void
 TcpDctcp::SetSocketBase (Ptr<TcpSocketBase> tsb)
 {
+  NS_LOG_FUNCTION (this << tsb);
   m_tsb = tsb;
   m_tsb->SetEcn ();
 }
@@ -107,7 +108,7 @@ TcpDctcp::ReduceCwnd (Ptr<TcpSocketState> tcb)
 {
   NS_LOG_FUNCTION (this << tcb);
   uint32_t val = (int)((1 - m_dctcpAlpha / 2.0) * tcb->m_cWnd);
-  tcb->m_cWnd = std::max (val,tcb->m_segmentSize);
+  tcb->m_cWnd = std::max (val, tcb->m_segmentSize);
 }
 
 void
@@ -129,13 +130,13 @@ TcpDctcp::PktsAcked (Ptr<TcpSocketState> tcb, uint32_t segmentsAcked, const Time
       double bytesEcn;
       if (m_ackedBytesTotal >  0)
         {
-          bytesEcn = (double)m_ackedBytesEcn / m_ackedBytesTotal;
+          bytesEcn = (double) m_ackedBytesEcn / m_ackedBytesTotal;
         }
       else
         {
           bytesEcn = 0.0;
         }
-      m_dctcpAlpha = (1.0 - m_dctcpShiftG) * m_dctcpAlpha + m_dctcpShiftG * bytesEcn;
+      m_dctcpAlpha = (1.0 - m_dctcpG) * m_dctcpAlpha + m_dctcpG * bytesEcn;
       Reset (tcb);
     }
 }
