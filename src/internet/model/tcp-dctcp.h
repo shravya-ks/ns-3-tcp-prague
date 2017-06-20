@@ -89,7 +89,7 @@ public:
   virtual void PktsAcked (Ptr<TcpSocketState> tcb, uint32_t segmentsAcked,
                           const Time &rtt);
   /**
-   * \brief Trigger events/calculations on occurence of congestion window event
+   * \brief Trigger events/calculations on occurrence of congestion window event
    *
    * \param tcb internal state
    * \param event congestion window event which triggered this function
@@ -148,7 +148,7 @@ private:
   double m_dctcpShiftG;                 //!< Estimation gain
 };
 
-}
+} // namespace ns3
 
-#endif /*TCP_DCTCP_H*/
+#endif /* TCP_DCTCP_H */
 
