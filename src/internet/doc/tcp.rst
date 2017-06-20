@@ -41,8 +41,8 @@ connection setup and close logic.  Several congestion control algorithms
 are supported, with NewReno the default, and Westwood, Hybla, HighSpeed,
 Vegas, Scalable, Veno, Binary Increase Congestion Control (BIC), Yet Another
 HighSpeed TCP (YeAH), Illinois, H-TCP, Low Extra Delay Background Transport
-(LEDBAT), Data Centre TCP (DCTCP) also supported. The model also supports 
-Selective Acknowledgements(SACK). Multipath-TCP is not yet supported in the 
+(LEDBAT), Data Center TCP (DCTCP) also supported. The model also supports 
+Selective Acknowledgements (SACK). Multipath-TCP is not yet supported in the 
 |ns3| releases.
 
 Model history
@@ -745,17 +745,16 @@ detecting that the congestion has occurred. DCTCP then scales the congestion
 window based on this estimate. This approach achieves high burst tolerance, low 
 latency, and high throughput with shallow-buffered switches. 
  
-* Functionality at the receiver: Check if CE bit is set in IP header of incoming packet, 
-and if so, send congestion notification to the sender by setting ECE bit in TCP header.
+* Receiver functionality: If CE is set in IP header of incoming packet, send congestion notification to the sender by setting ECE in TCP header.
 
-* Functionality at the sender: The sender should maintain a running average of fraction of 
-packets marked (α) by using the traditional exponential weighted moving average as shown below:
+* Sender functionality: It should maintain an average of fraction of packets marked (α) by using the exponential weighted moving average as shown below:
 
                α = (1 - g) x α + g x F
 
 where 
-* g is the estimation gain (btwn 0 and 1) 
-* F is fraction of packets marked in current RTT. 
+* g is the estimation gain (between 0 and 1) 
+* F is fraction of packets marked in current RTT.
+ 
 On receipt of an ACK with ECE bit set, the sender should respond by reducing the congestion
 window as follows, once for every window of data:
 
@@ -781,15 +780,14 @@ To enable DCTCP on a chosen TCP socket, the following configuration can be used:
 The following unit tests have been written to validate the implementation of DCTCP:
  
 * ECT flags should be set for SYN, SYN+ACK, ACK and data packets for DCTCP traffic
-* ECT flags should not be set for SYN, SYN+ACK and pure ACK packets, but should be 
-set on data packets for ECN enabled traditional TCP flows
-* ECE should be set only when CE flags are received at receiver and even if sender doesn’t 
-send CWR, receiver should not send ECE if it doesn’t receive packets with CE flags
+* ECT flags should not be set for SYN, SYN+ACK and pure ACK packets, but should be set on data packets for ECN enabled traditional TCP flows
+* ECE should be set only when CE flags are received at receiver and even if sender doesn’t send CWR, receiver should not send ECE if it doesn’t receive packets with CE flags
 * Test to validate cwnd increment in DCTCP
 * Test to validate cwnd decrement in DCTCP
  
  
-More information about DCTCP is available in the following Internet draft: https://tools.ietf.org/html/draft-ietf-tcpm-dctcp-07
+More information about DCTCP is available in the following Internet draft:
+https://tools.ietf.org/html/draft-ietf-tcpm-dctcp-07
 
 
 Support for Explicit Congestion Notification (ECN)
