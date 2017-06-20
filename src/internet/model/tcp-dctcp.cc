@@ -68,7 +68,7 @@ TcpDctcp::TcpDctcp ()
 {
   NS_LOG_FUNCTION (this);
   m_delayedAckReserved = false;
-  m_ceState = 0;
+  m_ceState = false;
   m_ackedBytesEcn = 0;
   m_ackedBytesTotal = 0;
   m_priorRcvNxtFlag = false;
@@ -157,7 +157,7 @@ TcpDctcp::Reset (Ptr<TcpSocketState> tcb)
 }
 
 void
-TcpDctcp::CEState0to1 (Ptr<TcpSocketState> tcb)
+TcpDctcp::CeState0to1 (Ptr<TcpSocketState> tcb)
 {
   NS_LOG_FUNCTION (this << tcb);
   if (!m_ceState && m_delayedAckReserved && m_priorRcvNxtFlag)
@@ -179,12 +179,12 @@ TcpDctcp::CEState0to1 (Ptr<TcpSocketState> tcb)
       m_priorRcvNxtFlag = true;
     }
   m_priorRcvNxt = m_tsb->m_rxBuffer->NextRxSequence ();
-  m_ceState = 1;
+  m_ceState = true;
   tcb->m_ecnState = TcpSocketState::ECN_CE_RCVD;
 }
 
 void
-TcpDctcp::CEState1to0 (Ptr<TcpSocketState> tcb)
+TcpDctcp::CeState1to0 (Ptr<TcpSocketState> tcb)
 {
   NS_LOG_FUNCTION (this << tcb);
   if (m_ceState && m_delayedAckReserved && m_priorRcvNxtFlag)
@@ -206,7 +206,7 @@ TcpDctcp::CEState1to0 (Ptr<TcpSocketState> tcb)
       m_priorRcvNxtFlag = true;
     }
   m_priorRcvNxt = m_tsb->m_rxBuffer->NextRxSequence ();
-  m_ceState = 0;
+  m_ceState = false;
   tcb->m_ecnState = TcpSocketState::ECN_IDLE;
 }
 
@@ -243,10 +243,10 @@ TcpDctcp::CwndEvent (Ptr<TcpSocketState> tcb,
   switch (event)
     {
     case TcpSocketState::CA_EVENT_ECN_IS_CE:
-      CEState0to1 (tcb);
+      CeState0to1 (tcb);
       break;
     case TcpSocketState::CA_EVENT_ECN_NO_CE:
-      CEState1to0 (tcb);
+      CeState1to0 (tcb);
       break;
     case TcpSocketState::CA_EVENT_DELAYED_ACK:
     case TcpSocketState::CA_EVENT_NON_DELAYED_ACK:

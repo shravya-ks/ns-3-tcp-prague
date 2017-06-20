@@ -73,7 +73,7 @@ public:
   virtual Ptr<TcpCongestionOps> Fork ();
 
   /**
-   * \brief Adjust cwnd following DCTCP algorithm
+   * \brief Reduce congestion window based on DCTCP algorithm
    *
    * \param tcb internal congestion state
    */
@@ -89,7 +89,7 @@ public:
   virtual void PktsAcked (Ptr<TcpSocketState> tcb, uint32_t segmentsAcked,
                           const Time &rtt);
   /**
-   * \brief Trigger events/calculations on occurance congestion window event
+   * \brief Trigger events/calculations on occurence of congestion window event
    *
    * \param tcb internal state
    * \param event congestion window event which triggered this function
@@ -97,21 +97,20 @@ public:
   virtual void CwndEvent (Ptr<TcpSocketState> tcb,
                           const TcpSocketState::TcpCaEvent_t event);
 
-
 private:
   /**
-   * \brief Changes state of m_ceState to 1
+   * \brief Changes state of m_ceState to true
    *
    * \param tcb internal congestion state
    */
-  void CEState0to1 (Ptr<TcpSocketState> tcb);
+  void CeState0to1 (Ptr<TcpSocketState> tcb);
 
   /**
-   * \brief Changes state of m_ceState to 0
+   * \brief Changes state of m_ceState to false
    *
    * \param tcb internal congestion state
    */
-  void CEState1to0 (Ptr<TcpSocketState> tcb);
+  void CeState1to0 (Ptr<TcpSocketState> tcb);
 
   /**
    * \brief Updates the value of m_delayedAckReserved
@@ -136,17 +135,17 @@ private:
    */
   void SetDctcpAlpha (double alpha);
 
-  Ptr<TcpSocketBase> m_tsb;             //Tcp Socket Base state
-  uint32_t m_ackedBytesEcn;             //Number of acked bytes which are marked
-  uint32_t m_ackedBytesTotal;           //Total number of acked bytes
-  SequenceNumber32 m_priorRcvNxt;       //Seqnum of the first missing byte in data
-  bool m_priorRcvNxtFlag;               //Variable used in setting the value of m_priorRcvNxt for first time
-  double m_dctcpAlpha;                  //Parameter used to estimate fraction of sent bytes that encountered congestion
-  SequenceNumber32 m_nextSeq;           //TCP sequence number threshold for beginning a new observation window
-  bool m_nextSeqFlag;                   //Variable used in setting the value of m_nextSeq for first time
-  uint32_t m_ceState;                   //DCTCP Congestion Experienced state
-  bool m_delayedAckReserved;            //Delayed Ack state
-  double m_dctcpShiftG;                 //Estimation gain
+  Ptr<TcpSocketBase> m_tsb;             //!< TCP Socket Base state
+  uint32_t m_ackedBytesEcn;             //!< Number of acked bytes which are marked
+  uint32_t m_ackedBytesTotal;           //!< Total number of acked bytes
+  SequenceNumber32 m_priorRcvNxt;       //!< Seqnum of the first missing byte in data
+  bool m_priorRcvNxtFlag;               //!< Variable used in setting the value of m_priorRcvNxt for first time
+  double m_dctcpAlpha;                  //!< Parameter used to estimate fraction of sent bytes that encountered congestion
+  SequenceNumber32 m_nextSeq;           //!< TCP sequence number threshold for beginning a new observation window
+  bool m_nextSeqFlag;                   //!< Variable used in setting the value of m_nextSeq for first time
+  bool m_ceState;                       //!< DCTCP Congestion Experienced state
+  bool m_delayedAckReserved;            //!< Delayed Ack state
+  double m_dctcpShiftG;                 //!< Estimation gain
 };
 
 }
