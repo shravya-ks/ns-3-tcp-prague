@@ -21,11 +21,11 @@
 
 #include "ns3/ipv4.h"
 #include "ns3/ipv6.h"
-#include "ns3/ipv4-interface-address.h"
-#include "ns3/ipv4-route.h"
-#include "ns3/ipv6-route.h"
-#include "ns3/ipv4-routing-protocol.h"
-#include "ns3/ipv6-routing-protocol.h"
+//#include "ns3/ipv4-interface-address.h"
+//#include "ns3/ipv4-route.h"
+//#include "ns3/ipv6-route.h"
+//#include "ns3/ipv4-routing-protocol.h"
+//#include "ns3/ipv6-routing-protocol.h"
 #include "../model/ipv4-end-point.h"
 #include "../model/ipv6-end-point.h"
 #include "tcp-general-test.h"
@@ -140,7 +140,6 @@ TcpDctcpCodePointsTest::Tx (const Ptr<const Packet> p, const TcpHeader &h, Socke
         }
     }
 }
-
 
 void
 TcpDctcpCodePointsTest::Rx (const Ptr<const Packet> p, const TcpHeader &h, SocketWho who)
@@ -527,14 +526,14 @@ private:
    */
   void ExecuteTest (void);
 
-  uint32_t m_cWnd; //!< cWnd
-  uint32_t m_segmentSize; //!< segment size
-  uint32_t m_segmentsAcked; //!< segments acked
-  uint32_t m_ssThresh; //!< ss thresh
-  Time m_rtt; //!< rtt
-  SequenceNumber32 m_highTxMark; //!< high tx mark
-  SequenceNumber32 m_lastAckedSeq; //!< last acked seq
-  Ptr<TcpSocketState> m_state; //!< state
+  uint32_t m_cWnd;                        //!< cWnd
+  uint32_t m_segmentSize;                 //!< segment size
+  uint32_t m_segmentsAcked;               //!< segments acked
+  uint32_t m_ssThresh;                    //!< ss thresh
+  Time m_rtt;                             //!< rtt
+  SequenceNumber32 m_highTxMark;          //!< high tx mark
+  SequenceNumber32 m_lastAckedSeq;        //!< last acked seq
+  Ptr<TcpSocketState> m_state;            //!< state
 };
 
 TcpDctcpToNewReno::TcpDctcpToNewReno (uint32_t cWnd, uint32_t segmentSize, uint32_t ssThresh,
