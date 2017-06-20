@@ -131,14 +131,14 @@ private:
   /**
    * \brief Sets the value of m_dctcpAlpha
    *
-   * \param alpha dctcp alpha parameter
+   * \param alpha DCTCP alpha parameter
    */
   void SetDctcpAlpha (double alpha);
 
   Ptr<TcpSocketBase> m_tsb;             //!< TCP Socket Base state
   uint32_t m_ackedBytesEcn;             //!< Number of acked bytes which are marked
   uint32_t m_ackedBytesTotal;           //!< Total number of acked bytes
-  SequenceNumber32 m_priorRcvNxt;       //!< Seqnum of the first missing byte in data
+  SequenceNumber32 m_priorRcvNxt;       //!< Sequence number of the first missing byte in data
   bool m_priorRcvNxtFlag;               //!< Variable used in setting the value of m_priorRcvNxt for first time
   double m_dctcpAlpha;                  //!< Parameter used to estimate fraction of sent bytes that encountered congestion
   SequenceNumber32 m_nextSeq;           //!< TCP sequence number threshold for beginning a new observation window
