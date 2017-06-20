@@ -733,6 +733,64 @@ implementation are:
 
 More information about LEDBAT is available in RFC 6817: https://tools.ietf.org/html/rfc6817
 
+Data Center TCP (DCTCP)
+^^^^^^^^^^^^^^^^^^^^^^^^
+ 
+DCTCP is an enhancement to the TCP congestion control algorithm for data center 
+networks and leverages Explicit Congestion Notification (ECN) to provide multi-bit 
+feedback to the end hosts. DCTCP extends the Explicit Congestion Notification 
+to estimate the fraction of bytes that encounter congestion, rather than simply 
+detecting that the congestion has occurred. DCTCP then scales the congestion 
+window based on this estimate. This approach achieves high burst tolerance, low 
+latency, and high throughput with shallow-buffered switches. 
+ 
+* Functionality at the receiver: Check if CE bit is set in IP header of incoming packet, 
+and if so, send congestion notification to the sender by setting ECE bit in TCP header.
+
+* Functionality at the sender: The sender should maintain a running average of fraction of 
+packets marked (α) by using the traditional exponential weighted moving average as shown below:
+
+               α = (1 - g) x α + g x F
+
+where 
+* g is the estimation gain (btwn 0 and 1) 
+* F is fraction of packets marked in current RTT. 
+On receipt of an ACK with ECE bit set, the sender should respond by reducing the congestion
+window as follows, once for every window of data:
+
+               cwnd = cwnd * (1 - α / 2)
+ 
+Following the recommendation of IETF of DCTCP, the default values of the parameters are:
+ 
+* g = 0.0625
+* alpha = 0
+ 
+To enable DCTCP on all TCP sockets, the following configuration can be used:
+ 
+::
+
+  Config::SetDefault ("ns3::TcpL4Protocol::SocketType", TypeIdValue (TcpDctcp::GetTypeId ()));
+ 
+To enable DCTCP on a chosen TCP socket, the following configuration can be used:
+ 
+::
+ 
+  Config::Set ("$ns3::NodeListPriv/NodeList/1/$ns3::TcpL4Protocol/SocketType", TypeIdValue (TcpDctcp::GetTypeId ()));
+ 
+The following unit tests have been written to validate the implementation of DCTCP:
+ 
+* ECT flags should be set for SYN, SYN+ACK, ACK and data packets for DCTCP traffic
+* ECT flags should not be set for SYN, SYN+ACK and pure ACK packets, but should be 
+set on data packets for ECN enabled traditional TCP flows
+* ECE should be set only when CE flags are received at receiver and even if sender doesn’t 
+send CWR, receiver should not send ECE if it doesn’t receive packets with CE flags
+* Test to validate cwnd increment in DCTCP
+* Test to validate cwnd decrement in DCTCP
+ 
+ 
+More information about DCTCP is available in the following Internet draft: https://tools.ietf.org/html/draft-ietf-tcpm-dctcp-07
+
+
 Support for Explicit Congestion Notification (ECN)
 ++++++++++++++++++++++++++++++++++++++++++++++++++
 
