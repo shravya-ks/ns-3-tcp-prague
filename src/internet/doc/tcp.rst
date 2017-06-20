@@ -40,9 +40,10 @@ In brief, the native |ns3| TCP model supports a full bidirectional TCP with
 connection setup and close logic.  Several congestion control algorithms
 are supported, with NewReno the default, and Westwood, Hybla, HighSpeed,
 Vegas, Scalable, Veno, Binary Increase Congestion Control (BIC), Yet Another
-HighSpeed TCP (YeAH), Illinois, H-TCP and Low Extra Delay Background Transport
-(LEDBAT) also supported. The model also supports Selective Acknowledgements
-(SACK). Multipath-TCP is not yet supported in the |ns3| releases.
+HighSpeed TCP (YeAH), Illinois, H-TCP, Low Extra Delay Background Transport
+(LEDBAT), Data Centre TCP (DCTCP) also supported. The model also supports 
+Selective Acknowledgements(SACK). Multipath-TCP is not yet supported in the 
+|ns3| releases.
 
 Model history
 +++++++++++++
@@ -960,6 +961,7 @@ section below on :ref:`Writing-tcp-tests`.
 * **tcp-yeah-test:** Unit tests on the YeAH congestion control
 * **tcp-illinois-test:** Unit tests on the Illinois congestion control
 * **tcp-ledbat-test:** Unit tests on the LEDBAT congestion control
+* **tcp-dctcp-test:** Unit tests on the DCTCP congestion control
 * **tcp-option:** Unit tests on TCP options
 * **tcp-pkts-acked-test:** Unit test the number of time that PktsAcked is called
 * **tcp-rto-test:** Unit test behavior after a RTO timeout occurs
