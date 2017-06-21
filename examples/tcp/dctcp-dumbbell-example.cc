@@ -175,9 +175,10 @@ main (int argc, char *argv[])
   Config::SetDefault ("ns3::RedQueueDisc::Mode", StringValue ("QUEUE_DISC_MODE_PACKETS"));
   Config::SetDefault ("ns3::RedQueueDisc::MeanPktSize", UintegerValue (meanPktSize));
   Config::SetDefault ("ns3::RedQueueDisc::QW", DoubleValue (1));
-  Config::SetDefault ("ns3::RedQueueDisc::MinTh", DoubleValue (170));
-  Config::SetDefault ("ns3::RedQueueDisc::MaxTh", DoubleValue (170));
-  Config::SetDefault ("ns3::RedQueueDisc::QueueLimit", UintegerValue (1000));
+  Config::SetDefault ("ns3::RedQueueDisc::MinTh", DoubleValue (85));
+  Config::SetDefault ("ns3::RedQueueDisc::MaxTh", DoubleValue (85));
+  Config::SetDefault ("ns3::RedQueueDisc::QueueLimit", UintegerValue (500));
+  Config::SetDefault ("ns3::RedQueueDisc::UseEcn", BooleanValue (true));
 
   NS_LOG_INFO ("Install internet stack on all nodes.");
   InternetStackHelper internet;
