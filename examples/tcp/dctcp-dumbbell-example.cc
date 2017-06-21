@@ -42,7 +42,7 @@
 
 using namespace ns3;
 
-NS_LOG_COMPONENT_DEFINE ("RedTests");
+NS_LOG_COMPONENT_DEFINE ("DctcpDumbbellExample");
 
 uint32_t checkTimes;
 double avgQueueSize;
@@ -68,7 +68,6 @@ Ipv4InterfaceContainer i3i4;
 Ipv4InterfaceContainer i3i5;
 
 std::stringstream filePlotQueue;
-std::stringstream filePlotQueueAvg;
 
 void
 CheckQueueSize (Ptr<QueueDisc> queue)
@@ -85,9 +84,6 @@ CheckQueueSize (Ptr<QueueDisc> queue)
   fPlotQueue << Simulator::Now ().GetSeconds () << " " << qSize << std::endl;
   fPlotQueue.close ();
 
-  std::ofstream fPlotQueueAvg (filePlotQueueAvg.str ().c_str (), std::ios::out|std::ios::app);
-  fPlotQueueAvg << Simulator::Now ().GetSeconds () << " " << avgQueueSize / checkTimes << std::endl;
-  fPlotQueueAvg.close ();
 }
 
 void
@@ -143,11 +139,9 @@ BuildAppsTest ()
 int
 main (int argc, char *argv[])
 {
-  //LogComponentEnable ("RedQueueDisc", LOG_LEVEL_INFO);
-  LogComponentEnable ("TcpDctcp", LOG_LEVEL_ALL);
-  //LogComponentEnable ("TcpSocketBase", LOG_LEVEL_ALL);
-  std::string redLinkDataRate = "1.5Mbps";
-  std::string redLinkDelay = "20ms";
+  LogComponentEnable ("DctcpDumbbellExample", LOG_LEVEL_INFO);
+  std::string bottleneckLinkDataRate = "1.5Mbps";
+  std::string bottleneckLinkDelay = "20ms";
 
   std::string pathOut;
   bool writeForPlot = false;
@@ -216,8 +210,8 @@ main (int argc, char *argv[])
   tchPfifo.AddInternalQueues (handle, 3, "ns3::DropTailQueue", "MaxPackets", UintegerValue (1000));
 
   TrafficControlHelper tchRed;
-  tchRed.SetRootQueueDisc ("ns3::RedQueueDisc", "LinkBandwidth", StringValue (redLinkDataRate),
-                           "LinkDelay", StringValue (redLinkDelay));
+  tchRed.SetRootQueueDisc ("ns3::RedQueueDisc", "LinkBandwidth", StringValue (bottleneckLinkDataRate),
+                           "LinkDelay", StringValue (bottleneckLinkDelay));
 
   NS_LOG_INFO ("Create channels");
   PointToPointHelper p2p;
@@ -235,8 +229,8 @@ main (int argc, char *argv[])
   tchPfifo.Install (devn1n2);
 
   p2p.SetQueue ("ns3::DropTailQueue");
-  p2p.SetDeviceAttribute ("DataRate", StringValue (redLinkDataRate));
-  p2p.SetChannelAttribute ("Delay", StringValue (redLinkDelay));
+  p2p.SetDeviceAttribute ("DataRate", StringValue (bottleneckLinkDataRate));
+  p2p.SetChannelAttribute ("Delay", StringValue (bottleneckLinkDelay));
   NetDeviceContainer devn2n3 = p2p.Install (n2n3);
   // only backbone link has RED queue disc
   QueueDiscContainer queueDiscs = tchRed.Install (devn2n3);
@@ -293,11 +287,8 @@ main (int argc, char *argv[])
 
   if (writeForPlot)
     {
-      filePlotQueue << pathOut << "/" << "red-queue.plotme";
-      filePlotQueueAvg << pathOut << "/" << "red-queue_avg.plotme";
-
+      filePlotQueue << pathOut << "/" << "dctcp-dumbbell-queue.plotme";
       remove (filePlotQueue.str ().c_str ());
-      remove (filePlotQueueAvg.str ().c_str ());
       Ptr<QueueDisc> queue = queueDiscs.Get (0);
       Simulator::ScheduleNow (&CheckQueueSize, queue);
     }
@@ -308,28 +299,9 @@ main (int argc, char *argv[])
   if (flowMonitor)
     {
       std::stringstream stmp;
-      stmp << pathOut << "/red.flowmon";
+      stmp << pathOut << "/dctcp-dumbbell.flowmon";
 
       flowmon->SerializeToXmlFile (stmp.str ().c_str (), false, false);
-    }
-
-  if (printRedStats)
-    {
-      RedQueueDisc::Stats st = StaticCast<RedQueueDisc> (queueDiscs.Get (0))->GetStats ();
-      std::cout << "*** RED stats from Node 2 queue ***" << std::endl;
-      std::cout << "\t " << st.unforcedDrop << " drops due prob mark" << std::endl;
-      std::cout << "\t " << st.unforcedMark << " marks due prob mark" << std::endl;
-      std::cout << "\t " << st.forcedDrop << " drops due hard mark" << std::endl;
-      std::cout << "\t " << st.forcedMark << " drops due hard mark" << std::endl;
-      std::cout << "\t " << st.qLimDrop << " drops due queue full" << std::endl;
-
-      st = StaticCast<RedQueueDisc> (queueDiscs.Get (1))->GetStats ();
-      std::cout << "*** RED stats from Node 3 queue ***" << std::endl;
-      std::cout << "\t " << st.unforcedDrop << " drops due prob mark" << std::endl;
-      std::cout << "\t " << st.unforcedMark << " marks due prob mark" << std::endl;
-      std::cout << "\t " << st.forcedDrop << " drops due hard mark" << std::endl;
-      std::cout << "\t " << st.forcedMark << " drops due hard mark" << std::endl;
-      std::cout << "\t " << st.qLimDrop << " drops due queue full" << std::endl;
     }
 
   Simulator::Destroy ();
