@@ -148,8 +148,6 @@ main (int argc, char *argv[])
   bool writePcap = true;
   bool flowMonitor = false;
 
-  bool printRedStats = true;
-
   global_start_time = 0.0;
   global_stop_time = 11; 
   sink_start_time = global_start_time;
