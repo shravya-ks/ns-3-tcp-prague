@@ -1,5 +1,7 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
+ * Copyright (c) 2017 NITK Surathkal
+ *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 as
  * published by the Free Software Foundation;
@@ -13,12 +15,9 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * Authors: Marcos Talau <talau@users.sourceforge.net>
- *          Duy Nguyen <duy@soe.ucsc.edu>
- * Modified by:   Pasquale Imputato <p.imputato@gmail.com>
+ * Author: Shravya K.S. <shravya.ks0@gmail.com>
  *
  */
-
 
 /** Network topology
  *
@@ -188,12 +187,8 @@ main (int argc, char *argv[])
 
   uint32_t meanPktSize = 500;
 
-  // RED params
-  NS_LOG_INFO ("Set RED params");
   Config::SetDefault ("ns3::RedQueueDisc::Mode", StringValue ("QUEUE_DISC_MODE_PACKETS"));
   Config::SetDefault ("ns3::RedQueueDisc::MeanPktSize", UintegerValue (meanPktSize));
-  Config::SetDefault ("ns3::RedQueueDisc::Wait", BooleanValue (true));
-  Config::SetDefault ("ns3::RedQueueDisc::Gentle", BooleanValue (true));
   Config::SetDefault ("ns3::RedQueueDisc::QW", DoubleValue (1));
   Config::SetDefault ("ns3::RedQueueDisc::MinTh", DoubleValue (170));
   Config::SetDefault ("ns3::RedQueueDisc::MaxTh", DoubleValue (170));

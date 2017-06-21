@@ -21,11 +21,6 @@
 
 #include "ns3/ipv4.h"
 #include "ns3/ipv6.h"
-//#include "ns3/ipv4-interface-address.h"
-//#include "ns3/ipv4-route.h"
-//#include "ns3/ipv6-route.h"
-//#include "ns3/ipv4-routing-protocol.h"
-//#include "ns3/ipv6-routing-protocol.h"
 #include "../model/ipv4-end-point.h"
 #include "../model/ipv6-end-point.h"
 #include "tcp-general-test.h"
