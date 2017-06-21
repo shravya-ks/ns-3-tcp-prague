@@ -785,6 +785,11 @@ The following unit tests have been written to validate the implementation of DCT
 * Test to validate cwnd increment in DCTCP
 * Test to validate cwnd decrement in DCTCP
  
+Limitations of DCTCP implementation: DCTCP depends on a simple queue management
+algorithm in routers / switches to mark packets. The current implementation of
+DCTCP in ns-3 uses RED with a simple configuration to achieve the behavior of
+desired queue management algorithm. The same can also be achieved by using a
+PfifoFast, but it does not support ECN marking yet.
  
 More information about DCTCP is available in the following Internet draft:
 https://tools.ietf.org/html/draft-ietf-tcpm-dctcp-07
