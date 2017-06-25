@@ -181,18 +181,18 @@ public:
   void BoundingBox (double ulx, double uly, double lrx, double lry);
 
 private:
-  uint32_t m_xSize;   //!< X size of the BCube (number of columns)
-  uint32_t m_ySize;   //!< Y size of the BCube (number of rows)
-  std::vector<NetDeviceContainer> m_rowSwitchDevices;           //!< NetDevices in a row
-  std::vector<NetDeviceContainer> m_colSwitchDevices;           //!< NetDevices in a column
+  uint32_t m_numLevels;   //!< number of levels
+  uint32_t m_numServers;   //!< number of servers
+  NetDeviceContainer m_switchDevices;           //!< NetDevices in a row
+  NetDeviceContainer m_hostDevices;           //!< NetDevices in a column
   std::vector<Ipv4InterfaceContainer> m_rowSwitchInterfaces;    //!< IPv4 interfaces in a row
   std::vector<Ipv4InterfaceContainer> m_colSwitchInterfaces;    //!< IPv4 interfaces in a column
   std::vector<Ipv6InterfaceContainer> m_rowHostInterfaces;     //!< IPv4 interfaces in a row
   std::vector<Ipv6InterfaceContainer> m_rowSwitchInterfaces6;   //!< IPv6 interfaces in a row
   std::vector<Ipv6InterfaceContainer> m_colSwitchInterfaces6;   //!< IPv6 interfaces in a column
   std::vector<Ipv6InterfaceContainer> m_rowHostInterfaces6;     //!< IPv6 interfaces in a row
-  std::vector<NodeContainer> m_switches; //!< all the switches in the grid
-  std::vector<NodeContainer> m_hosts; //!< all the hosts in the grid
+  NodeContainer m_switches; //!< all the switches in the bcube
+  NodeContainer m_hosts; //!< all the hosts in the bcube
 };
 
 } // namespace ns3
