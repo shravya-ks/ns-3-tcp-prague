@@ -60,15 +60,13 @@ PointToPointBCubeHelper::PointToPointBCubeHelper (uint32_t nLevels,
       switchColId =0;
       uint32_t val1 = pow(nServers,level);
       uint32_t val2 = val1 * nServers;
-     // uint32_t val2 = pow(n, level+1);
+
       for(uint32_t j = 0; j < numLevelSwitches; j++)
       {
         uint32_t hostIndex = j%val1 + j/val1 * val2;
         for (uint32_t k = hostIndex; k < (hostIndex + val2); k+=val1)
-        {
-          //connect(sw[level][sid], host[v]);
-          //printf("sw %d,%d to host %d\n", level,sid,v);
-          NetDeviceContainer nd = p2pHelper.Install (m_hosts.Get (k), m_switches.Get (level*numLevelSwitches + switchColId));//error here yea but what is error i know error is in this line but dont know what is erro, array index out of bound, oh in? k or the other one, but it worked in c++ code na , same thing worked there
+        { 
+          NetDeviceContainer nd = p2pHelper.Install (m_hosts.Get (k), m_switches.Get (level*numLevelSwitches + switchColId));
           m_hostDevices.Add (nd.Get (0));
           m_switchDevices.Add (nd.Get (1));
         }
