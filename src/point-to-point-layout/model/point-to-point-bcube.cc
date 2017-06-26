@@ -1,5 +1,7 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
+ * Copyright (c) 2017 NITK Surathkal
+ *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 as
  * published by the Free Software Foundation;
@@ -13,7 +15,8 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * Author: Josh Pelkey <jpelkey@gatech.edu>
+ * Authors: Shravya Ks <shravya.ks0@gmail.com>
+ *
  */
 
 #include "ns3/point-to-point-bcube.h"
@@ -114,12 +117,7 @@ PointToPointBCubeHelper::BoundingBox (double ulx, double uly,
   double xHostAdder = xDist/numHosts;
 
  // uint32_t numSwitches = (m_numLevels + 1) * val;
-  double xSwitchAdder;
-  if (m_numServers % 2 == 0)
-     xSwitchAdder = (m_numServers / 2) * xHostAdder;
-  else
-     xSwitchAdder = ((m_numServers+1)/ 2) * xHostAdder;
-
+  double xSwitchAdder = m_numServers * xHostAdder;
   double  yAdder = yDist/(m_numLevels + 2);  // (m_numLevels + 1) layers of switches and 1 layer of hosts
 
   //Allot hosts
@@ -127,7 +125,7 @@ PointToPointBCubeHelper::BoundingBox (double ulx, double uly,
   double yLoc = yDist / 2; 
   for (uint32_t i = 0; i < numHosts; ++i)
   {
-     xLoc = xDist / 2;
+     //xLoc = xDist / 4;
      Ptr<Node> node = m_hosts.Get(i);
      Ptr<ConstantPositionMobilityModel> loc = node->GetObject<ConstantPositionMobilityModel> ();
      if (loc ==0)
@@ -137,15 +135,18 @@ PointToPointBCubeHelper::BoundingBox (double ulx, double uly,
        }
      Vector locVec (xLoc, yLoc, 0);
      loc->SetPosition (locVec);
-     xLoc += xHostAdder;
+     xLoc += 2*xHostAdder;
   }
 
-  yLoc += yAdder;
+  yLoc -= yAdder;
   
   //Allot Switches
-  for (uint32_t i = 0; i < m_numLevels; ++i)
+  for (uint32_t i = 0; i < m_numLevels + 1; ++i)
     {
-      xLoc = xDist / 2 + xSwitchAdder;
+      if(m_numServers % 2 == 0)
+        xLoc = xSwitchAdder/2 + xHostAdder ;
+      else
+        xLoc = xSwitchAdder/2 + xHostAdder/2;
       for (uint32_t j = 0; j < val; ++j)
         {
           Ptr<Node> node = m_switches.Get(i * val + j);
@@ -158,9 +159,9 @@ PointToPointBCubeHelper::BoundingBox (double ulx, double uly,
           Vector locVec (xLoc, yLoc, 0);
           loc->SetPosition (locVec);
 
-          xLoc += 2 * xSwitchAdder;
+          xLoc += 2*xSwitchAdder;
         }
-      yLoc += yAdder;
+      yLoc -= yAdder;
     }
 }
 
