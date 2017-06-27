@@ -15,7 +15,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * Authors: Shravya Ks <shravya.ks0@gmail.com>
+ * Authors: Shravya K.S. <shravya.ks0@gmail.com>
  *
  */
 #include <iostream>
@@ -46,43 +46,21 @@ int main (int argc, char *argv[])
 
   cmd.Parse (argc,argv);
   
-  LogComponentEnable ("PointToPointBCubeHelper", LOG_LEVEL_ALL);
+  //LogComponentEnable ("PointToPointBCubeHelper", LOG_LEVEL_ALL);
   // Create the point-to-point link helpers
   PointToPointHelper pointToPointRouter;
   pointToPointRouter.SetDeviceAttribute  ("DataRate", StringValue ("10Mbps"));
   pointToPointRouter.SetChannelAttribute ("Delay", StringValue ("1ms"));
 
   PointToPointBCubeHelper d (nLevels, nServers, pointToPointRouter);
-  /*NS_LOG_INFO ("Install internet stack on all nodes.");
-  InternetStackHelper internet;
-  bcube.InstallStack (internet);*/
-
-
+  //NS_LOG_INFO ("Install internet stack on all nodes.");
   // Install Stack
   InternetStackHelper stack;
   d.InstallStack (stack);
 
   d.AssignIpv4Addresses(Ipv4Address("10.0.0.0"),Ipv4Mask("/16"));
-  // Assign IP Addresses
-  /*d.AssignIpv4Addresses (Ipv4AddressHelper ("10.1.1.0", "255.255.255.0"),
-                         Ipv4AddressHelper ("10.2.1.0", "255.255.255.0"),
-                         Ipv4AddressHelper ("10.3.1.0", "255.255.255.0"));
-
-  // Install on/off app on all right side nodes
-  OnOffHelper clientHelper ("ns3::UdpSocketFactory", Address ());
-  clientHelper.SetAttribute ("OnTime", StringValue ("ns3::UniformRandomVariable"));
-  clientHelper.SetAttribute ("OffTime", StringValue ("ns3::UniformRandomVariable"));
-  ApplicationContainer clientApps;
-
-  for (uint32_t i = 0; i < d.RightCount (); ++i)
-    {
-      // Create an on/off app sending packets to the same leaf right side
-      AddressValue remoteAddress (InetSocketAddress (d.GetLeftIpv4Address (i), 1000));
-      clientHelper.SetAttribute ("Remote", remoteAddress);
-      clientApps.Add (clientHelper.Install (d.GetRight (i)));
-    }
-
-  clientApps.Start (Seconds (0.0));
+ 
+  /*clientApps.Start (Seconds (0.0));
   clientApps.Stop (Seconds (10.0));*/
 
   // Set the bounding box for animation
