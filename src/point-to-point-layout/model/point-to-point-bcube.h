@@ -94,7 +94,7 @@ public:
    * \returns Ipv4Address of one of the interfaces of the switch 
    *          specified by the (row, col) address
    */
-  Ipv4Address GetSwitchIpv4Address (uint32_t row, uint32_t col);
+  Ipv4Address GetSwitchIpv4Address (uint32_t row, uint32_t col) const;
 
   /**
    * This returns an Ipv6 address at the switch specified by 
@@ -111,7 +111,7 @@ public:
    * \returns Ipv6Address of one of the interfaces of the switch 
    *          specified by the (row, col) address
    */
-  Ipv6Address GetSwitchIpv6Address (uint32_t row, uint32_t col);
+  Ipv6Address GetSwitchIpv6Address (uint32_t row, uint32_t col) const;
 
   /**
    * This returns an Ipv4 address at the host specified by 
@@ -126,7 +126,7 @@ public:
    * \returns Ipv4Address of one of the interfaces of the host 
    *          specified by the (row, col) address
    */
-  Ipv4Address GetHostIpv4Address (uint32_t row, uint32_t col);
+  Ipv4Address GetHostIpv4Address (uint32_t row) const;
 
   /**
    * This returns an Ipv6 address at the host specified by 
@@ -141,7 +141,7 @@ public:
    * \returns Ipv6Address of one of the interfaces of the host 
    *          specified by the (row, col) address
    */
-  Ipv6Address GetHostIpv6Address (uint32_t row, uint32_t col);
+  Ipv6Address GetHostIpv6Address (uint32_t row) const;
 
   /**
    * \param stack an InternetStackHelper which is used to install 
@@ -158,7 +158,7 @@ public:
    * \param colIp the Ipv4AddressHelper used to assign Ipv4 addresses 
    *              to all of the col interfaces in the BCube
    */
-  void AssignSwitchIpv4Addresses (Ipv4AddressHelper rowIp, Ipv4AddressHelper colIp);
+  void AssignIpv4Addresses (Ipv4Address network, Ipv4Mask mask);
 
   /**
    * Assigns Ipv6 addresses to all the row and column interfaces of the switch
@@ -167,7 +167,7 @@ public:
    *                of the IPv6 Address
    * \param prefix the prefix length
    */
-  void AssignSwitchIpv6Addresses (Ipv6Address network, Ipv6Prefix prefix);
+  void AssignIpv6Addresses (Ipv6Address network, Ipv6Prefix prefix);
 
   /**
    * Sets up the node canvas locations for every node in the BCube.
@@ -183,14 +183,11 @@ public:
 private:
   uint32_t m_numLevels;   //!< number of levels
   uint32_t m_numServers;   //!< number of servers
-  NetDeviceContainer m_switchDevices;           //!< NetDevices in a row
-  NetDeviceContainer m_hostDevices;           //!< NetDevices in a column
-  std::vector<Ipv4InterfaceContainer> m_rowSwitchInterfaces;    //!< IPv4 interfaces in a row
-  std::vector<Ipv4InterfaceContainer> m_colSwitchInterfaces;    //!< IPv4 interfaces in a column
-  std::vector<Ipv6InterfaceContainer> m_rowHostInterfaces;     //!< IPv4 interfaces in a row
-  std::vector<Ipv6InterfaceContainer> m_rowSwitchInterfaces6;   //!< IPv6 interfaces in a row
-  std::vector<Ipv6InterfaceContainer> m_colSwitchInterfaces6;   //!< IPv6 interfaces in a column
-  std::vector<Ipv6InterfaceContainer> m_rowHostInterfaces6;     //!< IPv6 interfaces in a row
+  std::vector<NetDeviceContainer> m_levelSwitchDevices;
+  std::vector<Ipv4InterfaceContainer> m_switchInterfaces;    //!< IPv4 interfaces 
+  Ipv4InterfaceContainer m_hostInterfaces;     //!< IPv4 interface
+  std::vector<Ipv6InterfaceContainer> m_switchInterfaces6;    //!< IPv4 interfaces
+  Ipv6InterfaceContainer m_hostInterfaces6;     //!< IPv4 interfac
   NodeContainer m_switches; //!< all the switches in the bcube
   NodeContainer m_hosts; //!< all the hosts in the bcube
 };

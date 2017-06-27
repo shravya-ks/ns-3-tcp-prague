@@ -27,6 +27,7 @@
 #include "ns3/string.h"
 #include "ns3/vector.h"
 #include "ns3/log.h"
+#include "ns3/ipv4-address-generator.h"
 #include "ns3/ipv6-address-generator.h"
 
 namespace ns3 {
@@ -43,7 +44,8 @@ PointToPointBCubeHelper::PointToPointBCubeHelper (uint32_t nLevels,
     {
       NS_FATAL_ERROR ("Need more nodes for BCube.");
     }
-
+  m_levelSwitchDevices.resize(nLevels+1);
+  m_switchInterfaces.resize(nLevels+1);
   uint32_t numLevelSwitches = pow (nServers,nLevels);
 
   //Number of hosts = pow(n,k+1)	
@@ -51,7 +53,7 @@ PointToPointBCubeHelper::PointToPointBCubeHelper (uint32_t nLevels,
 
   //Number of switches = (k+1)*pow(n,k)
   m_switches.Create ((nLevels+1)*numLevelSwitches);
-  
+
   InternetStackHelper stack;
   uint32_t switchColId;
 
@@ -67,8 +69,10 @@ PointToPointBCubeHelper::PointToPointBCubeHelper (uint32_t nLevels,
         for (uint32_t k = hostIndex; k < (hostIndex + val2); k+=val1)
         { 
           NetDeviceContainer nd = p2pHelper.Install (m_hosts.Get (k), m_switches.Get (level*numLevelSwitches + switchColId));
-          m_hostDevices.Add (nd.Get (0));
-          m_switchDevices.Add (nd.Get (1));
+          //m_hostDevices.Add (nd.Get (0));
+          //m_switchDevices.Add (nd.Get (1));
+          m_levelSwitchDevices[level].Add (nd.Get (0));
+          m_levelSwitchDevices[level].Add (nd.Get (1));
         }
         switchColId +=1;
       }
@@ -163,141 +167,76 @@ PointToPointBCubeHelper::BoundingBox (double ulx, double uly,
     }
 }
 
-/*
 void
-PointToPointGridHelper::AssignIpv4Addresses (Ipv4AddressHelper rowIp, Ipv4AddressHelper colIp)
+PointToPointBCubeHelper::AssignIpv4Addresses (Ipv4Address network, Ipv4Mask mask)
 {
-  // Assign addresses to all row devices in the grid.
-  // These devices are stored in a vector.  Each row 
-  // of the grid has all the row devices in one entry 
-  // of the vector.  These entries come in pairs.
-  for (uint32_t i = 0; i < m_rowDevices.size (); ++i)
-    {
-      Ipv4InterfaceContainer rowInterfaces; 
-      NetDeviceContainer rowContainer = m_rowDevices[i];
-      for (uint32_t j = 0; j < rowContainer.GetN (); j+=2)
-        {
-          rowInterfaces.Add (rowIp.Assign (rowContainer.Get (j))); 
-          rowInterfaces.Add (rowIp.Assign (rowContainer.Get (j+1)));
-          rowIp.NewNetwork ();
-        }
-      m_rowInterfaces.push_back (rowInterfaces);
-    }
+  Ipv4AddressGenerator::Init(network, mask);
+  Ipv4Address v4network;
+  Ipv4AddressHelper addrHelper;
 
-  // Assign addresses to all col devices in the grid.
-  // These devices are stored in a vector.  Each col 
-  // of the grid has all the col devices in one entry 
-  // of the vector.  These entries come in pairs.
-  for (uint32_t i = 0; i < m_colDevices.size (); ++i)
+  for(uint32_t i = 0; i < m_levelSwitchDevices.size (); ++i)
     {
-      Ipv4InterfaceContainer colInterfaces; 
-      NetDeviceContainer colContainer = m_colDevices[i];
-      for (uint32_t j = 0; j < colContainer.GetN (); j+=2)
-        {
-          colInterfaces.Add (colIp.Assign (colContainer.Get (j))); 
-          colInterfaces.Add (colIp.Assign (colContainer.Get (j+1)));
-          colIp.NewNetwork ();
-        }
-      m_colInterfaces.push_back (colInterfaces);
+          v4network = Ipv4AddressGenerator::NextNetwork (mask);
+          addrHelper.SetBase(v4network, mask);
+          for(uint32_t j = 0; j < m_levelSwitchDevices[i].GetN (); j += 2)
+            {
+              NS_LOG_DEBUG("here");
+              Ipv4InterfaceContainer ic = addrHelper.Assign (m_levelSwitchDevices[i].Get(j));
+              m_hostInterfaces.Add (ic);
+              ic = addrHelper.Assign (m_levelSwitchDevices[i].Get (j+1));
+              m_switchInterfaces[i].Add (ic);
+            }
     }
 }
 
+
 void
-PointToPointGridHelper::AssignIpv6Addresses(Ipv6Address addrBase, Ipv6Prefix prefix)
+PointToPointBCubeHelper::AssignIpv6Addresses(Ipv6Address addrBase, Ipv6Prefix prefix)
 {
   Ipv6AddressGenerator::Init(addrBase, prefix);
   Ipv6Address v6network;
   Ipv6AddressHelper addrHelper;
 
-  // Assign addresses to all row devices in the grid.
-  // These devices are stored in a vector.  Each row 
-  // of the grid has all the row devices in one entry 
-  // of the vector.  These entries come in pairs.
-  for (uint32_t i = 0; i < m_rowDevices.size (); ++i)
+  for(uint32_t i = 0; i < m_levelSwitchDevices.size (); ++i)
     {
-      Ipv6InterfaceContainer rowInterfaces; 
-      NetDeviceContainer rowContainer = m_rowDevices[i];
-      for (uint32_t j = 0; j < rowContainer.GetN (); j+=2)
-        {
-          v6network = Ipv6AddressGenerator::GetNetwork (prefix);
+          v6network = Ipv6AddressGenerator::NextNetwork (prefix);
           addrHelper.SetBase(v6network, prefix);
-          Ipv6InterfaceContainer ic = addrHelper.Assign (rowContainer.Get (j));
-          rowInterfaces.Add (ic);
-          ic = addrHelper.Assign (rowContainer.Get (j+1));
-          rowInterfaces.Add (ic);
-          Ipv6AddressGenerator::NextNetwork (prefix);
-        }
-      m_rowInterfaces6.push_back (rowInterfaces);
-    }
-
-  // Assign addresses to all col devices in the grid.
-  // These devices are stored in a vector.  Each col 
-  // of the grid has all the col devices in one entry 
-  // of the vector.  These entries come in pairs.
-  for (uint32_t i = 0; i < m_colDevices.size (); ++i)
-    {
-      Ipv6InterfaceContainer colInterfaces; 
-      NetDeviceContainer colContainer = m_colDevices[i];
-      for (uint32_t j = 0; j < colContainer.GetN (); j+=2)
-        {
-          v6network = Ipv6AddressGenerator::GetNetwork (prefix);
-          addrHelper.SetBase(v6network, prefix);
-          Ipv6InterfaceContainer ic = addrHelper.Assign (colContainer.Get (j));
-          colInterfaces.Add (ic);
-          ic = addrHelper.Assign (colContainer.Get (j+1));
-          colInterfaces.Add (ic);
-          Ipv6AddressGenerator::NextNetwork (prefix);
-        }
-      m_colInterfaces6.push_back (colInterfaces);
-    }
-}
-
-void
-PointToPointGridHelper::BoundingBox (double ulx, double uly,
-                                     double lrx, double lry)
-{
-  double xDist; 
-  double yDist; 
-  if (lrx > ulx)
-    {
-      xDist = lrx - ulx;
-    }
-  else
-    {
-      xDist = ulx - lrx;
-    }
-  if (lry > uly)
-    {
-      yDist = lry - uly;
-    }
-  else
-    {
-      yDist = uly - lry;
-    }
-  double xAdder = xDist / m_xSize;
-  double yAdder = yDist / m_ySize;
-  double yLoc = yDist / 2;
-  for (uint32_t i = 0; i < m_ySize; ++i)
-    {
-      double xLoc = xDist / 2;
-      for (uint32_t j = 0; j < m_xSize; ++j)
-        {
-          Ptr<Node> node = GetNode (i, j);
-          Ptr<ConstantPositionMobilityModel> loc = node->GetObject<ConstantPositionMobilityModel> ();
-          if (loc ==0)
+          for(uint32_t j = 0; j < m_levelSwitchDevices[i].GetN (); j += 2)
             {
-              loc = CreateObject<ConstantPositionMobilityModel> ();
-              node->AggregateObject (loc);
+              Ipv6InterfaceContainer ic = addrHelper.Assign (m_levelSwitchDevices[i].Get(j));
+              m_hostInterfaces6.Add (ic);
+              ic = addrHelper.Assign (m_levelSwitchDevices[i].Get (j+1));
+              m_switchInterfaces6[i].Add (ic);
             }
-          Vector locVec (xLoc, yLoc, 0);
-          loc->SetPosition (locVec);
-
-          xLoc += xAdder;
-        }
-      yLoc += yAdder;
     }
 }
 
+Ipv4Address
+PointToPointBCubeHelper::GetHostIpv4Address (uint32_t i) const
+{
+  return m_hostInterfaces.GetAddress (i);
+}
+
+Ipv4Address
+PointToPointBCubeHelper::GetSwitchIpv4Address (uint32_t i, uint32_t j) const
+{
+  return m_switchInterfaces[i].GetAddress (j);
+}
+
+Ipv6Address
+PointToPointBCubeHelper::GetHostIpv6Address (uint32_t i) const
+{
+  return m_hostInterfaces6.GetAddress (i, 1);
+}
+
+Ipv6Address
+PointToPointBCubeHelper::GetSwitchIpv6Address (uint32_t i, uint32_t j) const
+{
+  return m_switchInterfaces6[i].GetAddress (j, 1);
+}
+
+ 
+/*
 Ptr<Node> 
 PointToPointGridHelper::GetNode (uint32_t row, uint32_t col)
 {
