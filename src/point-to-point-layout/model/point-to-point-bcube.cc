@@ -45,9 +45,9 @@ PointToPointBCubeHelper::PointToPointBCubeHelper (uint32_t nLevels,
     {
       NS_FATAL_ERROR ("Need more nodes for BCube.");
     }
-  m_levelSwitchDevices.resize (nLevels + 1);
-  m_switchInterfaces.resize (nLevels + 1);
   uint32_t numLevelSwitches = pow (nServers,nLevels);
+  m_levelSwitchDevices.resize ((nLevels + 1) * numLevelSwitches);
+  m_switchInterfaces.resize ((nLevels + 1) * numLevelSwitches);
 
   //Number of servers = pow(n,k+1)
   m_servers.Create (nServers * numLevelSwitches);
@@ -70,8 +70,8 @@ PointToPointBCubeHelper::PointToPointBCubeHelper (uint32_t nLevels,
           for (uint32_t k = serverIndex; k < (serverIndex + val2); k += val1)
             {
               NetDeviceContainer nd = p2pHelper.Install (m_servers.Get (k), m_switches.Get (level * numLevelSwitches + switchColId));
-              m_levelSwitchDevices[level].Add (nd.Get (0));
-              m_levelSwitchDevices[level].Add (nd.Get (1));
+              m_levelSwitchDevices[level * numLevelSwitches + switchColId].Add (nd.Get (0));
+              m_levelSwitchDevices[level * numLevelSwitches + switchColId].Add (nd.Get (1));
             }
           switchColId += 1;
         }

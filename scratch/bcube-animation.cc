@@ -27,6 +27,7 @@
 #include "ns3/netanim-module.h"
 #include "ns3/applications-module.h"
 #include "ns3/point-to-point-layout-module.h"
+#include "ns3/ipv4-nix-vector-helper.h"
 
 using namespace ns3;
 
@@ -37,7 +38,7 @@ int main (int argc, char *argv[])
 
   uint32_t    nLevels = 1;
   uint32_t    nServers = 4;
-  std::string animFile = "bcube-animation.xml" ;  // Name of file for animation output
+  std::string animFile = "bcube-animation.xml";   // Name of file for animation output
 
   CommandLine cmd;
   cmd.AddValue ("nLevels", "Number of levels", nLevels);
@@ -45,23 +46,46 @@ int main (int argc, char *argv[])
   cmd.AddValue ("animFile",  "File Name for Animation Output", animFile);
 
   cmd.Parse (argc,argv);
-  
-  //LogComponentEnable ("PointToPointBCubeHelper", LOG_LEVEL_ALL);
+  InternetStackHelper internet;
+  Ipv4NixVectorHelper nixRouting;
+  Ipv4StaticRoutingHelper staticRouting;
+  Ipv4ListRoutingHelper list;
+  list.Add (staticRouting, 0);
+  list.Add (nixRouting, 10);
+  internet.SetRoutingHelper (list);
+
+  LogComponentEnable ("PointToPointBCubeHelper", LOG_LEVEL_ALL);
   // Create the point-to-point link helpers
   PointToPointHelper pointToPointRouter;
   pointToPointRouter.SetDeviceAttribute  ("DataRate", StringValue ("10Mbps"));
   pointToPointRouter.SetChannelAttribute ("Delay", StringValue ("1ms"));
 
   PointToPointBCubeHelper d (nLevels, nServers, pointToPointRouter);
-  //NS_LOG_INFO ("Install internet stack on all nodes.");
   // Install Stack
   InternetStackHelper stack;
   d.InstallStack (stack);
 
-  d.AssignIpv4Addresses(Ipv4Address("10.0.0.0"),Ipv4Mask("/16"));
- 
-  /*clientApps.Start (Seconds (0.0));
-  clientApps.Stop (Seconds (10.0));*/
+  d.AssignIpv4Addresses (Ipv4Address ("10.0.0.0"),Ipv4Mask ("/16"));
+
+  OnOffHelper clientHelper ("ns3::UdpSocketFactory", Address ());
+  clientHelper.SetAttribute ("OnTime", StringValue ("ns3::ConstantRandomVariable[Constant=1]"));
+  clientHelper.SetAttribute ("OffTime", StringValue ("ns3::ConstantRandomVariable[Constant=0]"));
+
+  ApplicationContainer clientApps;
+  AddressValue remoteAddress (InetSocketAddress (d.GetServerIpv4Address (3), 5001));
+  clientHelper.SetAttribute ("Remote", remoteAddress);
+  clientApps.Add (clientHelper.Install (d.GetServerNode (0)));
+
+  uint16_t port = 50001;
+  Address sinkLocalAddress (InetSocketAddress (Ipv4Address::GetAny (), port));
+  PacketSinkHelper sinkHelper ("ns3::UdpSocketFactory", sinkLocalAddress);
+  ApplicationContainer sinkApp = sinkHelper.Install (d.GetServerNode (3));
+
+  clientApps.Start (Seconds (1.0));
+  clientApps.Stop (Seconds (10.0));
+
+  sinkApp.Start (Seconds (0.0));
+  sinkApp.Stop (Seconds (10.0));
 
   // Set the bounding box for animation
   d.BoundingBox (1, 1, 100, 100);
@@ -70,12 +94,12 @@ int main (int argc, char *argv[])
   AnimationInterface anim (animFile);
   anim.EnablePacketMetadata (); // Optional
   anim.EnableIpv4L3ProtocolCounters (Seconds (0), Seconds (10)); // Optional
-  
+
   // Set up the acutal simulation
   Ipv4GlobalRoutingHelper::PopulateRoutingTables ();
 
   Simulator::Run ();
-  std::cout << "Animation Trace file created:" << animFile.c_str ()<< std::endl;
+  std::cout << "Animation Trace file created:" << animFile.c_str () << std::endl;
   Simulator::Destroy ();
   return 0;
 }
