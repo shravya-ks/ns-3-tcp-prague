@@ -72,12 +72,12 @@ public:
   Ptr<Node> GetSwitchNode (uint32_t row, uint32_t col) const;
 
   /**
-   * \param col the column address of the host desired
+   * \param col the column address of the server desired
    *
-   * \returns a pointer to the host specified by the
+   * \returns a pointer to the server specified by the
    *          column address
    */
-  Ptr<Node> GetHostNode (uint32_t col) const;
+  Ptr<Node> GetServerNode (uint32_t col) const;
 
   /**
    * This returns an Ipv4 address at the switch specified by
@@ -85,7 +85,7 @@ public:
    * multiple interfaces in the BCube; therefore, it also has
    * multiple Ipv4 addresses.  This method only returns one of
    * the addresses. If you picture the BCube, the address returned
-   * is the lowest index host connected to this switch.
+   * is the lowest index server connected to this switch.
    *
    * \param row the row address of the switch desired
    *
@@ -102,7 +102,7 @@ public:
    * multiple interfaces in the BCube; therefore, it also has
    * multiple Ipv6 addresses.  This method only returns one of
    * the addresses. If you picture the BCube, the address returned
-   * is the lowest index host connected to this switch.
+   * is the lowest index server connected to this switch.
    *
    * \param row the row address of the switch desired
    *
@@ -114,34 +114,34 @@ public:
   Ipv6Address GetSwitchIpv6Address (uint32_t row, uint32_t col) const;
 
   /**
-   * This returns an Ipv4 address at the host specified by
-   * the col address.  Technically, a host will have
+   * This returns an Ipv4 address at the server specified by
+   * the col address.  Technically, a server will have
    * multiple interfaces in the BCube; therefore, it also has
    * multiple Ipv4 addresses.  This method only returns one of
    * the addresses. If you picture the BCube, the address returned
-   * is the switch at lowest level connected to this host.
+   * is the switch at lowest level connected to this server.
    *
-   * \param col the column address of the host desired
+   * \param col the column address of the server desired
    *
-   * \returns Ipv4Address of one of the interfaces of the host
+   * \returns Ipv4Address of one of the interfaces of the server
    *          specified by the col address
    */
-  Ipv4Address GetHostIpv4Address (uint32_t col) const;
+  Ipv4Address GetServerIpv4Address (uint32_t col) const;
 
   /**
-   * This returns an Ipv6 address at the host specified by
-   * the col address.  Technically, a host will have
+   * This returns an Ipv6 address at the server specified by
+   * the col address.  Technically, a server will have
    * multiple interfaces in the BCube; therefore, it also has
    * multiple Ipv6 addresses.  This method only returns one of
    * the addresses. If you picture the BCube, the address returned
-   * is the switch at lowest level connected to this host.
+   * is the switch at lowest level connected to this server.
    *
-   * \param col the column address of the host desired
+   * \param col the column address of the server desired
    *
-   * \returns Ipv6Address of one of the interfaces of the host
+   * \returns Ipv6Address of one of the interfaces of the server
    *          specified by the col address
    */
-  Ipv6Address GetHostIpv6Address (uint32_t col) const;
+  Ipv6Address GetServerIpv6Address (uint32_t col) const;
 
   /**
    * \param stack an InternetStackHelper which is used to install
@@ -183,13 +183,13 @@ public:
 private:
   uint32_t m_numLevels;                                         //!< number of levels
   uint32_t m_numServers;                                        //!< number of servers
-  std::vector<NetDeviceContainer> m_levelSwitchDevices;         //!< Net Device container for hosts and switches
+  std::vector<NetDeviceContainer> m_levelSwitchDevices;         //!< Net Device container for servers and switches
   std::vector<Ipv4InterfaceContainer> m_switchInterfaces;       //!< IPv4 interfaces of switch
-  Ipv4InterfaceContainer m_hostInterfaces;                      //!< IPv4 interfaces of host
+  Ipv4InterfaceContainer m_serverInterfaces;                      //!< IPv4 interfaces of server
   std::vector<Ipv6InterfaceContainer> m_switchInterfaces6;      //!< IPv6 interfaces of switch
-  Ipv6InterfaceContainer m_hostInterfaces6;                     //!< IPv6 interfaces of host
+  Ipv6InterfaceContainer m_serverInterfaces6;                     //!< IPv6 interfaces of server
   NodeContainer m_switches;                                     //!< all the switches in the bcube
-  NodeContainer m_hosts;                                        //!< all the hosts in the bcube
+  NodeContainer m_servers;                                        //!< all the servers in the bcube
 };
 
 } // namespace ns3

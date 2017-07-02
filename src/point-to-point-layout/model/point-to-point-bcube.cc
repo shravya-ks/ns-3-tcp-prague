@@ -49,8 +49,8 @@ PointToPointBCubeHelper::PointToPointBCubeHelper (uint32_t nLevels,
   m_switchInterfaces.resize (nLevels + 1);
   uint32_t numLevelSwitches = pow (nServers,nLevels);
 
-  //Number of hosts = pow(n,k+1)
-  m_hosts.Create (nServers * numLevelSwitches);
+  //Number of servers = pow(n,k+1)
+  m_servers.Create (nServers * numLevelSwitches);
 
   //Number of switches = (k+1)*pow(n,k)
   m_switches.Create ((nLevels + 1) * numLevelSwitches);
@@ -66,10 +66,10 @@ PointToPointBCubeHelper::PointToPointBCubeHelper (uint32_t nLevels,
 
       for (uint32_t j = 0; j < numLevelSwitches; j++)
         {
-          uint32_t hostIndex = j % val1 + j / val1 * val2;
-          for (uint32_t k = hostIndex; k < (hostIndex + val2); k += val1)
+          uint32_t serverIndex = j % val1 + j / val1 * val2;
+          for (uint32_t k = serverIndex; k < (serverIndex + val2); k += val1)
             {
-              NetDeviceContainer nd = p2pHelper.Install (m_hosts.Get (k), m_switches.Get (level * numLevelSwitches + switchColId));
+              NetDeviceContainer nd = p2pHelper.Install (m_servers.Get (k), m_switches.Get (level * numLevelSwitches + switchColId));
               m_levelSwitchDevices[level].Add (nd.Get (0));
               m_levelSwitchDevices[level].Add (nd.Get (1));
             }
@@ -86,7 +86,7 @@ PointToPointBCubeHelper::~PointToPointBCubeHelper ()
 void
 PointToPointBCubeHelper::InstallStack (InternetStackHelper stack)
 {
-  stack.Install (m_hosts);
+  stack.Install (m_servers);
   stack.Install (m_switches);
 }
 
@@ -114,20 +114,20 @@ PointToPointBCubeHelper::BoundingBox (double ulx, double uly,
     }
 
   uint32_t val = pow (m_numServers,m_numLevels);
-  uint32_t numHosts = val * m_numServers;
-  double xHostAdder = xDist / numHosts;
+  uint32_t numServers = val * m_numServers;
+  double xServerAdder = xDist / numServers;
 
   // uint32_t numSwitches = (m_numLevels + 1) * val;
-  double xSwitchAdder = m_numServers * xHostAdder;
-  double  yAdder = yDist / (m_numLevels + 2);  // (m_numLevels + 1) layers of switches and 1 layer of hosts
+  double xSwitchAdder = m_numServers * xServerAdder;
+  double  yAdder = yDist / (m_numLevels + 2);  // (m_numLevels + 1) layers of switches and 1 layer of servers
 
-  //Allot hosts
+  //Allot servers
   double xLoc;
   double yLoc = yDist / 2;
-  for (uint32_t i = 0; i < numHosts; ++i)
+  for (uint32_t i = 0; i < numServers; ++i)
     {
       //xLoc = xDist / 4;
-      Ptr<Node> node = m_hosts.Get (i);
+      Ptr<Node> node = m_servers.Get (i);
       Ptr<ConstantPositionMobilityModel> loc = node->GetObject<ConstantPositionMobilityModel> ();
       if (loc == 0)
         {
@@ -136,7 +136,7 @@ PointToPointBCubeHelper::BoundingBox (double ulx, double uly,
         }
       Vector locVec (xLoc, yLoc, 0);
       loc->SetPosition (locVec);
-      xLoc += 2 * xHostAdder;
+      xLoc += 2 * xServerAdder;
     }
 
   yLoc -= yAdder;
@@ -146,11 +146,11 @@ PointToPointBCubeHelper::BoundingBox (double ulx, double uly,
     {
       if (m_numServers % 2 == 0)
         {
-          xLoc = xSwitchAdder / 2 + xHostAdder;
+          xLoc = xSwitchAdder / 2 + xServerAdder;
         }
       else
         {
-          xLoc = xSwitchAdder / 2 + xHostAdder / 2;
+          xLoc = xSwitchAdder / 2 + xServerAdder / 2;
         }
       for (uint32_t j = 0; j < val; ++j)
         {
@@ -185,7 +185,7 @@ PointToPointBCubeHelper::AssignIpv4Addresses (Ipv4Address network, Ipv4Mask mask
         {
           NS_LOG_DEBUG ("here");
           Ipv4InterfaceContainer ic = addrHelper.Assign (m_levelSwitchDevices[i].Get (j));
-          m_hostInterfaces.Add (ic);
+          m_serverInterfaces.Add (ic);
           ic = addrHelper.Assign (m_levelSwitchDevices[i].Get (j + 1));
           m_switchInterfaces[i].Add (ic);
         }
@@ -207,7 +207,7 @@ PointToPointBCubeHelper::AssignIpv6Addresses (Ipv6Address addrBase, Ipv6Prefix p
       for (uint32_t j = 0; j < m_levelSwitchDevices[i].GetN (); j += 2)
         {
           Ipv6InterfaceContainer ic = addrHelper.Assign (m_levelSwitchDevices[i].Get (j));
-          m_hostInterfaces6.Add (ic);
+          m_serverInterfaces6.Add (ic);
           ic = addrHelper.Assign (m_levelSwitchDevices[i].Get (j + 1));
           m_switchInterfaces6[i].Add (ic);
         }
@@ -215,9 +215,9 @@ PointToPointBCubeHelper::AssignIpv6Addresses (Ipv6Address addrBase, Ipv6Prefix p
 }
 
 Ipv4Address
-PointToPointBCubeHelper::GetHostIpv4Address (uint32_t i) const
+PointToPointBCubeHelper::GetServerIpv4Address (uint32_t i) const
 {
-  return m_hostInterfaces.GetAddress (i);
+  return m_serverInterfaces.GetAddress (i);
 }
 
 Ipv4Address
@@ -227,9 +227,9 @@ PointToPointBCubeHelper::GetSwitchIpv4Address (uint32_t i, uint32_t j) const
 }
 
 Ipv6Address
-PointToPointBCubeHelper::GetHostIpv6Address (uint32_t i) const
+PointToPointBCubeHelper::GetServerIpv6Address (uint32_t i) const
 {
-  return m_hostInterfaces6.GetAddress (i, 1);
+  return m_serverInterfaces6.GetAddress (i, 1);
 }
 
 Ipv6Address
@@ -239,9 +239,9 @@ PointToPointBCubeHelper::GetSwitchIpv6Address (uint32_t i, uint32_t j) const
 }
 
 Ptr<Node>
-PointToPointBCubeHelper::GetHostNode (uint32_t i) const
+PointToPointBCubeHelper::GetServerNode (uint32_t i) const
 {
-  return m_hosts.Get (i);
+  return m_servers.Get (i);
 }
 
 Ptr<Node>
