@@ -49,8 +49,9 @@ PointToPointFatTreeHelper::PointToPointFatTreeHelper (uint32_t numPods,
   uint32_t numGroups = numPods/2;		        // number of group of core switches
   uint32_t numCoreSwitches = numPods/2;		        // number of core switch in a group
   uint32_t numServers = numPods*numPods*numPods/4;	// number of hosts in the entire network	
-  //m_levelSwitchDevices.resize ((nLevels + 1) * numLevelSwitches);
-  //m_switchInterfaces.resize ((nLevels + 1) * numLevelSwitches);
+  m_edgeSwitchDevices.resize (numPods * numEdgeSwitches);
+  m_aggregateSwitchDevices.resize (numPods * numAggregateSwitches);
+  m_coreSwitchDevices.resize (numGroups * numCoreSwitches);
 
   m_servers.Create (numServers);
   m_edgeSwitches.Create (numEdgeSwitches * numPods);
@@ -66,6 +67,8 @@ PointToPointFatTreeHelper::PointToPointFatTreeHelper (uint32_t numPods,
       for (uint32_t j = 0; j < numEdgeSwitches; j++)
         {
           NetDeviceContainer nd = p2pHelper.Install (m_servers.Get (hostId), m_edgeSwitches.Get (i));
+          m_edgeSwitchDevices[i].Add (nd.Get (0));
+          m_edgeSwitchDevices[i].Add (nd.Get (1));
           hostId += 1;
         }
     }
@@ -79,6 +82,8 @@ PointToPointFatTreeHelper::PointToPointFatTreeHelper (uint32_t numPods,
             {
               NetDeviceContainer nd = p2pHelper.Install (m_edgeSwitches.Get (i * numEdgeSwitches + k), 
                                                          m_aggregateSwitches.Get(i * numAggregateSwitches + j));
+              m_aggregateSwitchDevices[i * numAggregateSwitches + j].Add (nd.Get (0));
+              m_aggregateSwitchDevices[i * numAggregateSwitches + j].Add (nd.Get (1));
             }
         }
     }
@@ -92,6 +97,8 @@ PointToPointFatTreeHelper::PointToPointFatTreeHelper (uint32_t numPods,
              {	
                NetDeviceContainer nd = p2pHelper.Install (m_aggregateSwitches.Get (k * numAggregateSwitches + i), 
                                                           m_coreSwitches.Get(i * numCoreSwitches + j));
+               m_coreSwitchDevices[i * numCoreSwitches + j].Add (nd.Get (0));
+               m_coreSwitchDevices[i * numCoreSwitches + j].Add (nd.Get (1));
               }
           }
     }
@@ -223,87 +230,173 @@ PointToPointFatTreeHelper::BoundingBox (double ulx, double uly,
     }
 }
 
-/*
+
 void
-PointToPointBCubeHelper::AssignIpv4Addresses (Ipv4Address network, Ipv4Mask mask)
+PointToPointFatTreeHelper::AssignIpv4Addresses (Ipv4Address network, Ipv4Mask mask)
 {
   Ipv4AddressGenerator::Init (network, mask);
   Ipv4Address v4network;
   Ipv4AddressHelper addrHelper;
 
-  for (uint32_t i = 0; i < m_levelSwitchDevices.size (); ++i)
+  for (uint32_t i = 0; i < m_edgeSwitchDevices.size (); ++i)
     {
       v4network = Ipv4AddressGenerator::NextNetwork (mask);
       addrHelper.SetBase (v4network, mask);
-      for (uint32_t j = 0; j < m_levelSwitchDevices[i].GetN (); j += 2)
+      for (uint32_t j = 0; j < m_edgeSwitchDevices[i].GetN (); j += 2)
         {
-          Ipv4InterfaceContainer ic = addrHelper.Assign (m_levelSwitchDevices[i].Get (j));
+          Ipv4InterfaceContainer ic = addrHelper.Assign (m_edgeSwitchDevices[i].Get (j));
           m_serverInterfaces.Add (ic);
-          ic = addrHelper.Assign (m_levelSwitchDevices[i].Get (j + 1));
-          m_switchInterfaces[i].Add (ic);
+          ic = addrHelper.Assign (m_edgeSwitchDevices[i].Get (j + 1));
+          m_edgeSwitchInterfaces.Add (ic);
+        }
+    }
+
+    for (uint32_t i = 0; i < m_aggregateSwitchDevices.size (); ++i)
+    {
+      v4network = Ipv4AddressGenerator::NextNetwork (mask);
+      addrHelper.SetBase (v4network, mask);
+      for (uint32_t j = 0; j < m_aggregateSwitchDevices[i].GetN (); j += 2)
+        {
+          Ipv4InterfaceContainer ic = addrHelper.Assign (m_aggregateSwitchDevices[i].Get (j));
+          m_edgeSwitchInterfaces.Add (ic);
+          ic = addrHelper.Assign (m_aggregateSwitchDevices[i].Get (j + 1));
+          m_aggregateSwitchInterfaces.Add (ic);
+        }
+    }
+
+    for (uint32_t i = 0; i < m_coreSwitchDevices.size (); ++i)
+    {
+      v4network = Ipv4AddressGenerator::NextNetwork (mask);
+      addrHelper.SetBase (v4network, mask);
+      for (uint32_t j = 0; j < m_coreSwitchDevices[i].GetN (); j += 2)
+        {
+          Ipv4InterfaceContainer ic = addrHelper.Assign (m_coreSwitchDevices[i].Get (j));
+          m_aggregateSwitchInterfaces.Add (ic);
+          ic = addrHelper.Assign (m_coreSwitchDevices[i].Get (j + 1));
+          m_coreSwitchInterfaces.Add (ic);
         }
     }
 }
 
 
 void
-PointToPointBCubeHelper::AssignIpv6Addresses (Ipv6Address addrBase, Ipv6Prefix prefix)
+PointToPointFatTreeHelper::AssignIpv6Addresses (Ipv6Address addrBase, Ipv6Prefix prefix)
 {
   Ipv6AddressGenerator::Init (addrBase, prefix);
   Ipv6Address v6network;
   Ipv6AddressHelper addrHelper;
 
-  for (uint32_t i = 0; i < m_levelSwitchDevices.size (); ++i)
+   for (uint32_t i = 0; i < m_edgeSwitchDevices.size (); ++i)
     {
       v6network = Ipv6AddressGenerator::NextNetwork (prefix);
       addrHelper.SetBase (v6network, prefix);
-      for (uint32_t j = 0; j < m_levelSwitchDevices[i].GetN (); j += 2)
+      for (uint32_t j = 0; j < m_edgeSwitchDevices[i].GetN (); j += 2)
         {
-          Ipv6InterfaceContainer ic = addrHelper.Assign (m_levelSwitchDevices[i].Get (j));
+          Ipv6InterfaceContainer ic = addrHelper.Assign (m_edgeSwitchDevices[i].Get (j));
           m_serverInterfaces6.Add (ic);
-          ic = addrHelper.Assign (m_levelSwitchDevices[i].Get (j + 1));
-          m_switchInterfaces6[i].Add (ic);
+          ic = addrHelper.Assign (m_edgeSwitchDevices[i].Get (j + 1));
+          m_edgeSwitchInterfaces6.Add (ic);
         }
     }
+
+    for (uint32_t i = 0; i < m_aggregateSwitchDevices.size (); ++i)
+    {
+      v6network = Ipv6AddressGenerator::NextNetwork (prefix);
+      addrHelper.SetBase (v6network, prefix);
+      for (uint32_t j = 0; j < m_aggregateSwitchDevices[i].GetN (); j += 2)
+        {
+          Ipv6InterfaceContainer ic = addrHelper.Assign (m_aggregateSwitchDevices[i].Get (j));
+          m_edgeSwitchInterfaces6.Add (ic);
+          ic = addrHelper.Assign (m_aggregateSwitchDevices[i].Get (j + 1));
+          m_aggregateSwitchInterfaces6.Add (ic);
+        }
+    }
+
+    for (uint32_t i = 0; i < m_coreSwitchDevices.size (); ++i)
+    {
+      v6network = Ipv6AddressGenerator::NextNetwork (prefix);
+      addrHelper.SetBase (v6network, prefix);
+      for (uint32_t j = 0; j < m_coreSwitchDevices[i].GetN (); j += 2)
+        {
+          Ipv6InterfaceContainer ic = addrHelper.Assign (m_coreSwitchDevices[i].Get (j));
+          m_aggregateSwitchInterfaces6.Add (ic);
+          ic = addrHelper.Assign (m_coreSwitchDevices[i].Get (j + 1));
+          m_coreSwitchInterfaces6.Add (ic);
+        }
+    }
+
 }
 
 Ipv4Address
-PointToPointBCubeHelper::GetServerIpv4Address (uint32_t i) const
+PointToPointFatTreeHelper::GetServerIpv4Address (uint32_t i) const
 {
   return m_serverInterfaces.GetAddress (i);
 }
 
 Ipv4Address
-PointToPointBCubeHelper::GetSwitchIpv4Address (uint32_t i, uint32_t j) const
+PointToPointFatTreeHelper::GetEdgeSwitchIpv4Address (uint32_t i) const
 {
-  return m_switchInterfaces[i].GetAddress (j);
+  return m_edgeSwitchInterfaces.GetAddress (i);
+}
+
+Ipv4Address
+PointToPointFatTreeHelper::GetAggregateSwitchIpv4Address (uint32_t i) const
+{
+  return m_aggregateSwitchInterfaces.GetAddress (i);
+}
+
+Ipv4Address
+PointToPointFatTreeHelper::GetCoreSwitchIpv4Address (uint32_t i) const
+{
+  return m_coreSwitchInterfaces.GetAddress (i);
 }
 
 Ipv6Address
-PointToPointBCubeHelper::GetServerIpv6Address (uint32_t i) const
+PointToPointFatTreeHelper::GetServerIpv6Address (uint32_t i) const
 {
   return m_serverInterfaces6.GetAddress (i, 1);
 }
 
 Ipv6Address
-PointToPointBCubeHelper::GetSwitchIpv6Address (uint32_t i, uint32_t j) const
+PointToPointFatTreeHelper::GetEdgeSwitchIpv6Address (uint32_t i) const
 {
-  return m_switchInterfaces6[i].GetAddress (j, 1);
+  return m_edgeSwitchInterfaces6.GetAddress (i, 1);
+}
+
+Ipv6Address
+PointToPointFatTreeHelper::GetAggregateSwitchIpv6Address (uint32_t i) const
+{
+  return m_aggregateSwitchInterfaces6.GetAddress (i, 1);
+}
+
+Ipv6Address
+PointToPointFatTreeHelper::GetCoreSwitchIpv6Address (uint32_t i) const
+{
+  return m_coreSwitchInterfaces6.GetAddress (i, 1);
 }
 
 Ptr<Node>
-PointToPointBCubeHelper::GetServerNode (uint32_t i) const
+PointToPointFatTreeHelper::GetServerNode (uint32_t i) const
 {
   return m_servers.Get (i);
 }
 
 Ptr<Node>
-PointToPointBCubeHelper::GetSwitchNode (uint32_t i, uint32_t j) const
+PointToPointFatTreeHelper::GetEdgeSwitchNode (uint32_t i) const
 {
-  uint32_t numLevelSwitches = pow (m_numServers,m_numLevels);
-  return m_switches.Get (i * numLevelSwitches + j);
+  return m_edgeSwitches.Get (i);
 }
 
-*/
+Ptr<Node>
+PointToPointFatTreeHelper::GetAggregateSwitchNode (uint32_t i) const
+{
+  return m_aggregateSwitches.Get (i);
+}
+
+Ptr<Node>
+PointToPointFatTreeHelper::GetCoreSwitchNode (uint32_t i) const
+{
+  return m_coreSwitches.Get (i);
+}
 
 } // namespace ns3

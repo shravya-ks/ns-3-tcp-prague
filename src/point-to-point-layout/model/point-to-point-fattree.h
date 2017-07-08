@@ -59,14 +59,28 @@ public:
   ~PointToPointFatTreeHelper ();
 
   /**
-   * \param row the row address of the switch desired
+   * \param col the column address of the edge switch desired
    *
-   * \param col the column address of the switch desired
-   *
-   * \returns a pointer to the switch specified by the
-   *          (row, col) address
+   * \returns a pointer to the edge switch specified by the
+   *          column address
    */
-  Ptr<Node> GetSwitchNode (uint32_t row, uint32_t col) const;
+  Ptr<Node> GetEdgeSwitchNode (uint32_t col) const;
+
+  /**
+   * \param col the column address of the aggregate switch desired
+   *
+   * \returns a pointer to the aggregate switch specified by the
+   *          column address
+   */
+  Ptr<Node> GetAggregateSwitchNode (uint32_t col) const;
+
+  /**
+   * \param col the column address of the core switch desired
+   *
+   * \returns a pointer to the core switch specified by the
+   *          column address
+   */
+  Ptr<Node> GetCoreSwitchNode (uint32_t col) const;
 
   /**
    * \param col the column address of the server desired
@@ -77,46 +91,102 @@ public:
   Ptr<Node> GetServerNode (uint32_t col) const;
 
   /**
-   * This returns an Ipv4 address at the switch specified by
-   * the (row, col) address.  Technically, a switch will have
-   * multiple interfaces in the BCube; therefore, it also has
+   * This returns an Ipv4 address at the edge switch specified by
+   * column address.  Technically, an edge switch will have
+   * multiple interfaces in the FatTree; therefore, it also has
    * multiple Ipv4 addresses.  This method only returns one of
-   * the addresses. If you picture the BCube, the address returned
+   * the addresses. If you picture the FatTree, the address returned
    * is the lowest index server connected to this switch.
    *
-   * \param row the row address of the switch desired
+   * \param col the column address of the edge switch desired
    *
-   * \param col the column address of the switch desired
-   *
-   * \returns Ipv4Address of one of the interfaces of the switch
-   *          specified by the (row, col) address
+   * \returns Ipv4Address of one of the interfaces of the edge switch
+   *          column address
    */
-  Ipv4Address GetSwitchIpv4Address (uint32_t row, uint32_t col) const;
+  Ipv4Address GetEdgeSwitchIpv4Address (uint32_t col) const;
 
   /**
-   * This returns an Ipv6 address at the switch specified by
-   * the (row, col) address.  Technically, a switch will have
-   * multiple interfaces in the BCube; therefore, it also has
-   * multiple Ipv6 addresses.  This method only returns one of
-   * the addresses. If you picture the BCube, the address returned
+   * This returns an Ipv4 address at the aggregate switch specified by
+   * column address.  Technically, an aggregate switch will have
+   * multiple interfaces in the FatTree; therefore, it also has
+   * multiple Ipv4 addresses.  This method only returns one of
+   * the addresses. If you picture the FatTree, the address returned
    * is the lowest index server connected to this switch.
    *
-   * \param row the row address of the switch desired
+   * \param col the column address of the aggregate switch desired
    *
-   * \param col the column address of the switch desired
-   *
-   * \returns Ipv6Address of one of the interfaces of the switch
-   *          specified by the (row, col) address
+   * \returns Ipv4Address of one of the interfaces of the aggregate switch
+   *          column address
    */
-  Ipv6Address GetSwitchIpv6Address (uint32_t row, uint32_t col) const;
+  Ipv4Address GetAggregateSwitchIpv4Address (uint32_t col) const;
+
+  /**
+   * This returns an Ipv4 address at the core switch specified by
+   * column address.  Technically, a core switch will have
+   * multiple interfaces in the FatTree; therefore, it also has
+   * multiple Ipv4 addresses.  This method only returns one of
+   * the addresses. If you picture the FatTree, the address returned
+   * is the lowest index server connected to this switch.
+   *
+   * \param col the column address of the core switch desired
+   *
+   * \returns Ipv4Address of one of the interfaces of the core switch
+   *          column address
+   */
+  Ipv4Address GetCoreSwitchIpv4Address (uint32_t col) const;
+
+  /**
+   * This returns an Ipv6 address at the edge switch specified by
+   * column address.  Technically, an edge switch will have
+   * multiple interfaces in the FatTree; therefore, it also has
+   * multiple Ipv6 addresses.  This method only returns one of
+   * the addresses. If you picture the FatTree, the address returned
+   * is the lowest index server connected to this switch.
+   *
+   * \param col the column address of the edge switch desired
+   *
+   * \returns Ipv6Address of one of the interfaces of the edge switch
+   *          column address
+   */
+  Ipv6Address GetEdgeSwitchIpv6Address (uint32_t col) const;
+
+  /**
+   * This returns an Ipv6 address at the aggregate switch specified by
+   * column address.  Technically, an aggregate switch will have
+   * multiple interfaces in the FatTree; therefore, it also has
+   * multiple Ipv6 addresses.  This method only returns one of
+   * the addresses. If you picture the FatTree, the address returned
+   * is the lowest index server connected to this switch.
+   *
+   * \param col the column address of the aggregate switch desired
+   *
+   * \returns Ipv6Address of one of the interfaces of the aggregate switch
+   *          column address
+   */
+  Ipv6Address GetAggregateSwitchIpv6Address (uint32_t col) const;
+
+  /**
+   * This returns an Ipv6 address at the core switch specified by
+   * column address.  Technically, a core switch will have
+   * multiple interfaces in the FatTree; therefore, it also has
+   * multiple Ipv6 addresses.  This method only returns one of
+   * the addresses. If you picture the FatTree, the address returned
+   * is the lowest index server connected to this switch.
+   *
+   * \param col the column address of the core switch desired
+   *
+   * \returns Ipv6Address of one of the interfaces of the core switch
+   *          column address
+   */
+  Ipv6Address GetCoreSwitchIpv6Address (uint32_t col) const;
 
   /**
    * This returns an Ipv4 address at the server specified by
    * the col address.  Technically, a server will have
-   * multiple interfaces in the BCube; therefore, it also has
+   * multiple interfaces in the FatTree; therefore, it also has
    * multiple Ipv4 addresses.  This method only returns one of
-   * the addresses. If you picture the BCube, the address returned
-   * is the switch at lowest level connected to this server.
+   * the addresses. If you picture the FatTree, the address returned
+   * is the leftmost edge switch  connected to this server.
    *
    * \param col the column address of the server desired
    *
@@ -128,10 +198,10 @@ public:
   /**
    * This returns an Ipv6 address at the server specified by
    * the col address.  Technically, a server will have
-   * multiple interfaces in the BCube; therefore, it also has
+   * multiple interfaces in the FatTree; therefore, it also has
    * multiple Ipv6 addresses.  This method only returns one of
-   * the addresses. If you picture the BCube, the address returned
-   * is the switch at lowest level connected to this server.
+   * the addresses. If you picture the FatTree, the address returned
+   * is the leftmost edge switch connected to this server.
    *
    * \param col the column address of the server desired
    *
@@ -142,12 +212,12 @@ public:
 
   /**
    * \param stack an InternetStackHelper which is used to install
-   *              on every node in the BCube
+   *              on every node in the FatTree
    */
   void InstallStack (InternetStackHelper stack);
 
   /**
-   * Assigns Ipv4 addresses to all the interfaces of switch
+   * Assigns Ipv4 addresses to all the interfaces of switches and hosts
    *
    * \param network an IPv4 address representing the network portion
    *                of the IPv4 Address
@@ -157,7 +227,7 @@ public:
   void AssignIpv4Addresses (Ipv4Address network, Ipv4Mask mask);
 
   /**
-   * Assigns Ipv6 addresses to all the interfaces of the switch
+   * Assigns Ipv6 addresses to all the interfaces of the switches and hosts
    *
    * \param network an IPv6 address representing the network portion
    *                of the IPv6 Address
@@ -167,7 +237,7 @@ public:
   void AssignIpv6Addresses (Ipv6Address network, Ipv6Prefix prefix);
 
   /**
-   * Sets up the node canvas locations for every node in the BCube.
+   * Sets up the node canvas locations for every node in the FatTree.
    * This is needed for use with the animation interface
    *
    * \param ulx upper left x value
@@ -178,12 +248,18 @@ public:
   void BoundingBox (double ulx, double uly, double lrx, double lry);
 
 private:
-  uint32_t m_numPods;                                           //!< number of pods
-  //std::vector<NetDeviceContainer> m_levelSwitchDevices;         //!< Net Device container for servers and switches
-  //std::vector<Ipv4InterfaceContainer> m_switchInterfaces;       //!< IPv4 interfaces of switch
-  //Ipv4InterfaceContainer m_serverInterfaces;                    //!< IPv4 interfaces of server
-  //std::vector<Ipv6InterfaceContainer> m_switchInterfaces6;      //!< IPv6 interfaces of switch
-  //Ipv6InterfaceContainer m_serverInterfaces6;                   //!< IPv6 interfaces of server
+  uint32_t m_numPods;                                          //!< Number of pods
+  std::vector<NetDeviceContainer> m_edgeSwitchDevices;         //!< Net Device container for edge switches and servers
+  std::vector<NetDeviceContainer> m_aggregateSwitchDevices;    //!< Net Device container for aggregate switches and edge switches
+  std::vector<NetDeviceContainer> m_coreSwitchDevices;         //!< Net Device container for core switches and aggregate switches
+  Ipv4InterfaceContainer m_edgeSwitchInterfaces;               //!< IPv4 interfaces of edge switch
+  Ipv4InterfaceContainer m_aggregateSwitchInterfaces;          //!< IPv4 interfaces of aggregate switch
+  Ipv4InterfaceContainer m_coreSwitchInterfaces;               //!< IPv4 interfaces of core switch
+  Ipv4InterfaceContainer m_serverInterfaces;                   //!< IPv4 interfaces of server
+  Ipv6InterfaceContainer m_edgeSwitchInterfaces6;              //!< IPv6 interfaces of edge switch
+  Ipv6InterfaceContainer m_aggregateSwitchInterfaces6;          //!< IPv6 interfaces of aggregate switch
+  Ipv6InterfaceContainer m_coreSwitchInterfaces6;               //!< IPv6 interfaces of core switch
+  Ipv6InterfaceContainer m_serverInterfaces6;                  //!< IPv6 interfaces of server
   NodeContainer m_coreSwitches;                                   //!< all the core switches in the fat-tree
   NodeContainer m_aggregateSwitches;                              //!< all the aggregate switches in the fat-tree
   NodeContainer m_edgeSwitches;                                   //!< all the edge switches in the fat-tree
