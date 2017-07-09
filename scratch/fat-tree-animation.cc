@@ -47,9 +47,9 @@ int main (int argc, char *argv[])
   cmd.Parse (argc,argv);
   InternetStackHelper internet;
   Ipv4StaticRoutingHelper staticRouting; 
-  Ipv4ListRoutingHelper list;
-  list.Add (staticRouting, 0);
-  internet.SetRoutingHelper (list);
+  //Ipv4ListRoutingHelper list;
+  //list.Add (staticRouting, 0);
+  //internet.SetRoutingHelper (list);
 
   LogComponentEnable ("PointToPointFatTreeHelper", LOG_LEVEL_ALL);
   // Create the point-to-point link helpers
@@ -68,14 +68,14 @@ int main (int argc, char *argv[])
   clientHelper.SetAttribute ("OffTime", StringValue ("ns3::ConstantRandomVariable[Constant=0]"));
 
   ApplicationContainer clientApps;
-  AddressValue remoteAddress (InetSocketAddress (d.GetServerIpv4Address (0), 5001));
+  AddressValue remoteAddress (InetSocketAddress (d.GetServerIpv4Address (1), 5001));
   clientHelper.SetAttribute ("Remote", remoteAddress);
-  clientApps.Add (clientHelper.Install (d.GetServerNode (1)));
+  clientApps.Add (clientHelper.Install (d.GetServerNode (3)));
 
   uint16_t port = 50001;
   Address sinkLocalAddress (InetSocketAddress (Ipv4Address::GetAny (), port));
   PacketSinkHelper sinkHelper ("ns3::UdpSocketFactory", sinkLocalAddress);
-  ApplicationContainer sinkApp = sinkHelper.Install (d.GetServerNode (0));
+  ApplicationContainer sinkApp = sinkHelper.Install (d.GetServerNode (1));
 
   clientApps.Start (Seconds (1.0));
   clientApps.Stop (Seconds (10.0));
