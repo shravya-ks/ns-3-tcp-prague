@@ -46,12 +46,13 @@ int main (int argc, char *argv[])
 
   cmd.Parse (argc,argv);
   InternetStackHelper internet;
-  Ipv4StaticRoutingHelper staticRouting; 
-  //Ipv4ListRoutingHelper list;
-  //list.Add (staticRouting, 0);
-  //internet.SetRoutingHelper (list);
+  Ipv4NixVectorHelper nixRouting; 
+  Ipv4StaticRoutingHelper staticRouting;
+  Ipv4ListRoutingHelper list;
+  list.Add (staticRouting, 0);	
+  list.Add (nixRouting, 10);	
+  internet.SetRoutingHelper(list);
 
-  LogComponentEnable ("PointToPointFatTreeHelper", LOG_LEVEL_ALL);
   // Create the point-to-point link helpers
   PointToPointHelper pointToPointRouter;
   pointToPointRouter.SetDeviceAttribute  ("DataRate", StringValue ("10Mbps"));
@@ -68,14 +69,14 @@ int main (int argc, char *argv[])
   clientHelper.SetAttribute ("OffTime", StringValue ("ns3::ConstantRandomVariable[Constant=0]"));
 
   ApplicationContainer clientApps;
-  AddressValue remoteAddress (InetSocketAddress (d.GetServerIpv4Address (1), 5001));
+  AddressValue remoteAddress (InetSocketAddress (d.GetServerIpv4Address (2), 5001));
   clientHelper.SetAttribute ("Remote", remoteAddress);
-  clientApps.Add (clientHelper.Install (d.GetServerNode (3)));
+  clientApps.Add (clientHelper.Install (d.GetServerNode (0)));
 
   uint16_t port = 50001;
   Address sinkLocalAddress (InetSocketAddress (Ipv4Address::GetAny (), port));
   PacketSinkHelper sinkHelper ("ns3::UdpSocketFactory", sinkLocalAddress);
-  ApplicationContainer sinkApp = sinkHelper.Install (d.GetServerNode (1));
+  ApplicationContainer sinkApp = sinkHelper.Install (d.GetServerNode (2));
 
   clientApps.Start (Seconds (1.0));
   clientApps.Stop (Seconds (10.0));
@@ -90,16 +91,10 @@ int main (int argc, char *argv[])
   AnimationInterface anim (animFile);
   anim.EnablePacketMetadata (); // Optional
   anim.EnableIpv4L3ProtocolCounters (Seconds (0), Seconds (10)); // Optional
-   
-  
-  Ptr<OutputStreamWrapper> routingStream = Create<OutputStreamWrapper> (("fattree.routes"), std::ios::out);
-  staticRouting.PrintRoutingTableAllAt (Seconds (4), routingStream); 	
 
   // Set up the acutal simulation
   Ipv4GlobalRoutingHelper::PopulateRoutingTables ();
 
-  PointToPointHelper ptp;
-  ptp.EnablePcapAll ("fattrree");
   Simulator::Run ();
   std::cout << "Animation Trace file created:" << animFile.c_str () << std::endl;
   Simulator::Destroy ();

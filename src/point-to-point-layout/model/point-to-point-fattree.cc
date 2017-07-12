@@ -240,10 +240,10 @@ PointToPointFatTreeHelper::AssignIpv4Addresses (Ipv4Address network, Ipv4Mask ma
 
   for (uint32_t i = 0; i < m_edgeSwitchDevices.size (); ++i)
     {
-      v4network = Ipv4AddressGenerator::NextNetwork (mask);
-      addrHelper.SetBase (v4network, mask);
       for (uint32_t j = 0; j < m_edgeSwitchDevices[i].GetN (); j += 2)
         {
+          v4network = Ipv4AddressGenerator::NextNetwork (mask);
+          addrHelper.SetBase (v4network, mask);
           Ipv4InterfaceContainer ic = addrHelper.Assign (m_edgeSwitchDevices[i].Get (j));
           m_serverInterfaces.Add (ic);
           ic = addrHelper.Assign (m_edgeSwitchDevices[i].Get (j + 1));
