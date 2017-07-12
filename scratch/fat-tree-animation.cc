@@ -46,12 +46,12 @@ int main (int argc, char *argv[])
 
   cmd.Parse (argc,argv);
   InternetStackHelper internet;
-  Ipv4NixVectorHelper nixRouting; 
+  Ipv4NixVectorHelper nixRouting;
   Ipv4StaticRoutingHelper staticRouting;
   Ipv4ListRoutingHelper list;
-  list.Add (staticRouting, 0);	
-  list.Add (nixRouting, 10);	
-  internet.SetRoutingHelper(list);
+  list.Add (staticRouting, 0);
+  list.Add (nixRouting, 10);
+  internet.SetRoutingHelper (list);
 
   // Create the point-to-point link helpers
   PointToPointHelper pointToPointRouter;

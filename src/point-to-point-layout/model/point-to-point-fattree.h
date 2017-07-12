@@ -182,11 +182,7 @@ public:
 
   /**
    * This returns an Ipv4 address at the server specified by
-   * the col address.  Technically, a server will have
-   * multiple interfaces in the FatTree; therefore, it also has
-   * multiple Ipv4 addresses.  This method only returns one of
-   * the addresses. If you picture the FatTree, the address returned
-   * is the leftmost edge switch  connected to this server.
+   * the col address.
    *
    * \param col the column address of the server desired
    *
@@ -197,11 +193,7 @@ public:
 
   /**
    * This returns an Ipv6 address at the server specified by
-   * the col address.  Technically, a server will have
-   * multiple interfaces in the FatTree; therefore, it also has
-   * multiple Ipv6 addresses.  This method only returns one of
-   * the addresses. If you picture the FatTree, the address returned
-   * is the leftmost edge switch connected to this server.
+   * the col address.
    *
    * \param col the column address of the server desired
    *

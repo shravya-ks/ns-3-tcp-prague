@@ -54,7 +54,6 @@ int main (int argc, char *argv[])
   list.Add (nixRouting, 10);
   internet.SetRoutingHelper (list);
 
-  LogComponentEnable ("PointToPointBCubeHelper", LOG_LEVEL_ALL);
   // Create the point-to-point link helpers
   PointToPointHelper pointToPointRouter;
   pointToPointRouter.SetDeviceAttribute  ("DataRate", StringValue ("10Mbps"));
@@ -62,8 +61,7 @@ int main (int argc, char *argv[])
 
   PointToPointBCubeHelper d (nLevels, nServers, pointToPointRouter);
   // Install Stack
-  InternetStackHelper stack;
-  d.InstallStack (stack);
+  d.InstallStack (internet);
 
   d.AssignIpv4Addresses (Ipv4Address ("10.0.0.0"),Ipv4Mask ("/16"));
 

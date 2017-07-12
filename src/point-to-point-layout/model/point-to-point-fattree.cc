@@ -43,12 +43,12 @@ PointToPointFatTreeHelper::PointToPointFatTreeHelper (uint32_t numPods,
     {
       NS_FATAL_ERROR ("Need more pods for FatTree.");
     }
-  
-  uint32_t numEdgeSwitches = numPods/2;
-  uint32_t numAggregateSwitches = numPods/2;            // number of aggregation switch in a pod
-  uint32_t numGroups = numPods/2;		        // number of group of core switches
-  uint32_t numCoreSwitches = numPods/2;		        // number of core switch in a group
-  uint32_t numServers = numPods*numPods*numPods/4;	// number of hosts in the entire network	
+
+  uint32_t numEdgeSwitches = numPods / 2;
+  uint32_t numAggregateSwitches = numPods / 2;            // number of aggregation switch in a pod
+  uint32_t numGroups = numPods / 2;                       // number of group of core switches
+  uint32_t numCoreSwitches = numPods / 2;                 // number of core switch in a group
+  uint32_t numServers = numPods * numPods * numPods / 4;      // number of hosts in the entire network
   m_edgeSwitchDevices.resize (numPods * numEdgeSwitches);
   m_aggregateSwitchDevices.resize (numPods * numAggregateSwitches);
   m_coreSwitchDevices.resize (numGroups * numCoreSwitches);
@@ -56,13 +56,13 @@ PointToPointFatTreeHelper::PointToPointFatTreeHelper (uint32_t numPods,
   m_servers.Create (numServers);
   m_edgeSwitches.Create (numEdgeSwitches * numPods);
   m_aggregateSwitches.Create (numAggregateSwitches * numPods);
-  m_coreSwitches.Create(numCoreSwitches * numGroups);
+  m_coreSwitches.Create (numCoreSwitches * numGroups);
 
   InternetStackHelper stack;
 
   //Connect servers to edge switches
   uint32_t hostId = 0;
-  for (uint32_t i = 0; i < numPods*numPods/2; i++)
+  for (uint32_t i = 0; i < numPods * numPods / 2; i++)
     {
       for (uint32_t j = 0; j < numEdgeSwitches; j++)
         {
@@ -78,10 +78,10 @@ PointToPointFatTreeHelper::PointToPointFatTreeHelper (uint32_t numPods,
     {
       for (uint32_t j = 0; j < numAggregateSwitches; j++)
         {
-	  for (uint32_t k = 0; k < numEdgeSwitches; k++)
+          for (uint32_t k = 0; k < numEdgeSwitches; k++)
             {
-              NetDeviceContainer nd = p2pHelper.Install (m_edgeSwitches.Get (i * numEdgeSwitches + k), 
-                                                         m_aggregateSwitches.Get(i * numAggregateSwitches + j));
+              NetDeviceContainer nd = p2pHelper.Install (m_edgeSwitches.Get (i * numEdgeSwitches + k),
+                                                         m_aggregateSwitches.Get (i * numAggregateSwitches + j));
               m_aggregateSwitchDevices[i * numAggregateSwitches + j].Add (nd.Get (0));
               m_aggregateSwitchDevices[i * numAggregateSwitches + j].Add (nd.Get (1));
             }
@@ -90,17 +90,17 @@ PointToPointFatTreeHelper::PointToPointFatTreeHelper (uint32_t numPods,
 
   //Connect aggregate switches to core switches
   for (uint32_t i = 0; i < numGroups; i++)
-    {		
+    {
       for (uint32_t j = 0; j < numCoreSwitches; j++)
-         {
-	   for (uint32_t k = 0; k < numPods; k++)
-             {	
-               NetDeviceContainer nd = p2pHelper.Install (m_aggregateSwitches.Get (k * numAggregateSwitches + i), 
-                                                          m_coreSwitches.Get(i * numCoreSwitches + j));
-               m_coreSwitchDevices[i * numCoreSwitches + j].Add (nd.Get (0));
-               m_coreSwitchDevices[i * numCoreSwitches + j].Add (nd.Get (1));
-              }
-          }
+        {
+          for (uint32_t k = 0; k < numPods; k++)
+            {
+              NetDeviceContainer nd = p2pHelper.Install (m_aggregateSwitches.Get (k * numAggregateSwitches + i),
+                                                         m_coreSwitches.Get (i * numCoreSwitches + j));
+              m_coreSwitchDevices[i * numCoreSwitches + j].Add (nd.Get (0));
+              m_coreSwitchDevices[i * numCoreSwitches + j].Add (nd.Get (1));
+            }
+        }
     }
 
 }
@@ -120,7 +120,7 @@ PointToPointFatTreeHelper::InstallStack (InternetStackHelper stack)
 
 void
 PointToPointFatTreeHelper::BoundingBox (double ulx, double uly,
-                                      double lrx, double lry)
+                                        double lrx, double lry)
 {
   double xDist;
   double yDist;
@@ -141,13 +141,13 @@ PointToPointFatTreeHelper::BoundingBox (double ulx, double uly,
       yDist = uly - lry;
     }
 
-  uint32_t numServers = m_numPods*m_numPods*m_numPods/4;
-  uint32_t numSwitches = m_numPods*m_numPods/2;
+  uint32_t numServers = m_numPods * m_numPods * m_numPods / 4;
+  uint32_t numSwitches = m_numPods * m_numPods / 2;
 
   double xServerAdder = xDist / numServers;
   double xEdgeSwitchAdder = xDist / numSwitches;
   double xAggregateSwitchAdder =  xDist / numSwitches;
-  double xCoreSwitchAdder = xDist / (numSwitches/2);
+  double xCoreSwitchAdder = xDist / (numSwitches / 2);
   double  yAdder = yDist / 4;  // 3 layers of switches and 1 layer of servers
 
   //Allot servers
@@ -165,7 +165,7 @@ PointToPointFatTreeHelper::BoundingBox (double ulx, double uly,
         }
       Vector locVec (xLoc, yLoc, 0);
       loc->SetPosition (locVec);
-      if(i%2 == 0)
+      if (i % 2 == 0)
         {
           xLoc += 3 * xServerAdder;
         }
@@ -190,9 +190,9 @@ PointToPointFatTreeHelper::BoundingBox (double ulx, double uly,
         }
       Vector locVec (xLoc, yLoc, 0);
       loc->SetPosition (locVec);
-      xLoc += 2*xEdgeSwitchAdder;
+      xLoc += 2 * xEdgeSwitchAdder;
     }
-  
+
   yLoc -= yAdder;
 
   //Allot aggregate switches
@@ -208,14 +208,14 @@ PointToPointFatTreeHelper::BoundingBox (double ulx, double uly,
         }
       Vector locVec (xLoc, yLoc, 0);
       loc->SetPosition (locVec);
-      xLoc += 2*xAggregateSwitchAdder;
+      xLoc += 2 * xAggregateSwitchAdder;
     }
 
   yLoc -= yAdder;
 
   //Allot aggregate switches
   xLoc = xCoreSwitchAdder;
-  for (uint32_t i = 0; i < numSwitches/2; ++i)
+  for (uint32_t i = 0; i < numSwitches / 2; ++i)
     {
       Ptr<Node> node = m_coreSwitches.Get (i);
       Ptr<ConstantPositionMobilityModel> loc = node->GetObject<ConstantPositionMobilityModel> ();
@@ -226,7 +226,7 @@ PointToPointFatTreeHelper::BoundingBox (double ulx, double uly,
         }
       Vector locVec (xLoc, yLoc, 0);
       loc->SetPosition (locVec);
-      xLoc += 2*xCoreSwitchAdder;
+      xLoc += 2 * xCoreSwitchAdder;
     }
 }
 
@@ -251,7 +251,7 @@ PointToPointFatTreeHelper::AssignIpv4Addresses (Ipv4Address network, Ipv4Mask ma
         }
     }
 
-    for (uint32_t i = 0; i < m_aggregateSwitchDevices.size (); ++i)
+  for (uint32_t i = 0; i < m_aggregateSwitchDevices.size (); ++i)
     {
       v4network = Ipv4AddressGenerator::NextNetwork (mask);
       addrHelper.SetBase (v4network, mask);
@@ -264,7 +264,7 @@ PointToPointFatTreeHelper::AssignIpv4Addresses (Ipv4Address network, Ipv4Mask ma
         }
     }
 
-    for (uint32_t i = 0; i < m_coreSwitchDevices.size (); ++i)
+  for (uint32_t i = 0; i < m_coreSwitchDevices.size (); ++i)
     {
       v4network = Ipv4AddressGenerator::NextNetwork (mask);
       addrHelper.SetBase (v4network, mask);
@@ -286,7 +286,7 @@ PointToPointFatTreeHelper::AssignIpv6Addresses (Ipv6Address addrBase, Ipv6Prefix
   Ipv6Address v6network;
   Ipv6AddressHelper addrHelper;
 
-   for (uint32_t i = 0; i < m_edgeSwitchDevices.size (); ++i)
+  for (uint32_t i = 0; i < m_edgeSwitchDevices.size (); ++i)
     {
       v6network = Ipv6AddressGenerator::NextNetwork (prefix);
       addrHelper.SetBase (v6network, prefix);
@@ -299,7 +299,7 @@ PointToPointFatTreeHelper::AssignIpv6Addresses (Ipv6Address addrBase, Ipv6Prefix
         }
     }
 
-    for (uint32_t i = 0; i < m_aggregateSwitchDevices.size (); ++i)
+  for (uint32_t i = 0; i < m_aggregateSwitchDevices.size (); ++i)
     {
       v6network = Ipv6AddressGenerator::NextNetwork (prefix);
       addrHelper.SetBase (v6network, prefix);
@@ -312,7 +312,7 @@ PointToPointFatTreeHelper::AssignIpv6Addresses (Ipv6Address addrBase, Ipv6Prefix
         }
     }
 
-    for (uint32_t i = 0; i < m_coreSwitchDevices.size (); ++i)
+  for (uint32_t i = 0; i < m_coreSwitchDevices.size (); ++i)
     {
       v6network = Ipv6AddressGenerator::NextNetwork (prefix);
       addrHelper.SetBase (v6network, prefix);
