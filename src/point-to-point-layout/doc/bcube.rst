@@ -24,7 +24,7 @@ A BCube0 is simply n servers connecting to an n-port switch. A BCube1 is constru
 from n BCube0s and n n-port switches. More generically, a BCubek (k ≥ 1)) is constructed 
 from n BCubek−1s and n^k n-port switches. Each server in a BCubek has k + 1 ports, which 
 are numbered from level-0 to level-k. It is easy to see that a BCubek has N = n^(k+1) 
-servers and k+ 1 level of switches, with each level having n^k n-port switches.
+servers and k + 1 level of switches, with each level having n^k n-port switches.
 
 The construction of a BCubek is as follows. We number the n BCubek−1s from 0 to n − 1 
 and the servers in each BCubek−1 from 0 to n^k − 1. We then connect the level-k port 
