@@ -181,15 +181,15 @@ public:
   void BoundingBox (double ulx, double uly, double lrx, double lry);
 
 private:
-  uint32_t m_numLevels;                                         //!< number of levels
-  uint32_t m_numServers;                                        //!< number of servers
+  uint32_t m_numLevels;                                         //!< number of levels (k)
+  uint32_t m_numServers;                                        //!< number of servers (n)
   std::vector<NetDeviceContainer> m_levelSwitchDevices;         //!< Net Device container for servers and switches
   std::vector<Ipv4InterfaceContainer> m_switchInterfaces;       //!< IPv4 interfaces of switch
   Ipv4InterfaceContainer m_serverInterfaces;                    //!< IPv4 interfaces of server
   std::vector<Ipv6InterfaceContainer> m_switchInterfaces6;      //!< IPv6 interfaces of switch
   Ipv6InterfaceContainer m_serverInterfaces6;                   //!< IPv6 interfaces of server
-  NodeContainer m_switches;                                     //!< all the switches in the bcube
-  NodeContainer m_servers;                                      //!< all the servers in the bcube
+  NodeContainer m_switches;                                     //!< all the switches in the BCube
+  NodeContainer m_servers;                                      //!< all the servers in the BCube
 };
 
 } // namespace ns3

@@ -45,14 +45,14 @@ PointToPointBCubeHelper::PointToPointBCubeHelper (uint32_t nLevels,
     {
       NS_FATAL_ERROR ("Need more nodes for BCube.");
     }
-  uint32_t numLevelSwitches = pow (nServers,nLevels);
+  uint32_t numLevelSwitches = pow (nServers, nLevels);
   m_levelSwitchDevices.resize ((nLevels + 1) * numLevelSwitches);
   m_switchInterfaces.resize ((nLevels + 1) * numLevelSwitches);
 
-  //Number of servers = pow(n,k+1)
+  // Number of servers = pow (n, k+1)
   m_servers.Create (nServers * numLevelSwitches);
 
-  //Number of switches = (k+1)*pow(n,k)
+  // Number of switches = (k+1) * pow(n, k)
   m_switches.Create ((nLevels + 1) * numLevelSwitches);
 
   InternetStackHelper stack;
@@ -86,6 +86,7 @@ PointToPointBCubeHelper::~PointToPointBCubeHelper ()
 void
 PointToPointBCubeHelper::InstallStack (InternetStackHelper stack)
 {
+  NS_LOG_FUNCTION (this << stack);
   stack.Install (m_servers);
   stack.Install (m_switches);
 }
@@ -94,6 +95,7 @@ void
 PointToPointBCubeHelper::BoundingBox (double ulx, double uly,
                                       double lrx, double lry)
 {
+  NS_LOG_FUNCTION (this << ulx << uly << lrx << lry);
   double xDist;
   double yDist;
   if (lrx > ulx)
@@ -116,17 +118,14 @@ PointToPointBCubeHelper::BoundingBox (double ulx, double uly,
   uint32_t val = pow (m_numServers,m_numLevels);
   uint32_t numServers = val * m_numServers;
   double xServerAdder = xDist / numServers;
-
-  // uint32_t numSwitches = (m_numLevels + 1) * val;
   double xSwitchAdder = m_numServers * xServerAdder;
-  double  yAdder = yDist / (m_numLevels + 2);  // (m_numLevels + 1) layers of switches and 1 layer of servers
+  double  yAdder = yDist / (m_numLevels + 2);
 
   //Allot servers
   double xLoc;
   double yLoc = yDist / 2;
   for (uint32_t i = 0; i < numServers; ++i)
     {
-      //xLoc = xDist / 4;
       Ptr<Node> node = m_servers.Get (i);
       Ptr<ConstantPositionMobilityModel> loc = node->GetObject<ConstantPositionMobilityModel> ();
       if (loc == 0)
@@ -173,6 +172,7 @@ PointToPointBCubeHelper::BoundingBox (double ulx, double uly,
 void
 PointToPointBCubeHelper::AssignIpv4Addresses (Ipv4Address network, Ipv4Mask mask)
 {
+  NS_LOG_FUNCTION (this << network << mask);
   Ipv4AddressGenerator::Init (network, mask);
   Ipv4Address v4network;
   Ipv4AddressHelper addrHelper;
@@ -183,7 +183,6 @@ PointToPointBCubeHelper::AssignIpv4Addresses (Ipv4Address network, Ipv4Mask mask
       addrHelper.SetBase (v4network, mask);
       for (uint32_t j = 0; j < m_levelSwitchDevices[i].GetN (); j += 2)
         {
-          NS_LOG_DEBUG ("here");
           Ipv4InterfaceContainer ic = addrHelper.Assign (m_levelSwitchDevices[i].Get (j));
           m_serverInterfaces.Add (ic);
           ic = addrHelper.Assign (m_levelSwitchDevices[i].Get (j + 1));
@@ -196,6 +195,7 @@ PointToPointBCubeHelper::AssignIpv4Addresses (Ipv4Address network, Ipv4Mask mask
 void
 PointToPointBCubeHelper::AssignIpv6Addresses (Ipv6Address addrBase, Ipv6Prefix prefix)
 {
+  NS_LOG_FUNCTION (this << addrBase << prefix);
   Ipv6AddressGenerator::Init (addrBase, prefix);
   Ipv6Address v6network;
   Ipv6AddressHelper addrHelper;
@@ -217,36 +217,42 @@ PointToPointBCubeHelper::AssignIpv6Addresses (Ipv6Address addrBase, Ipv6Prefix p
 Ipv4Address
 PointToPointBCubeHelper::GetServerIpv4Address (uint32_t i) const
 {
+  NS_LOG_FUNCTION (this << i);
   return m_serverInterfaces.GetAddress (i);
 }
 
 Ipv4Address
 PointToPointBCubeHelper::GetSwitchIpv4Address (uint32_t i, uint32_t j) const
 {
+  NS_LOG_FUNCTION (this << i << j);
   return m_switchInterfaces[i].GetAddress (j);
 }
 
 Ipv6Address
 PointToPointBCubeHelper::GetServerIpv6Address (uint32_t i) const
 {
+  NS_LOG_FUNCTION (this << i);
   return m_serverInterfaces6.GetAddress (i, 1);
 }
 
 Ipv6Address
 PointToPointBCubeHelper::GetSwitchIpv6Address (uint32_t i, uint32_t j) const
 {
+  NS_LOG_FUNCTION (this << i << j);
   return m_switchInterfaces6[i].GetAddress (j, 1);
 }
 
 Ptr<Node>
 PointToPointBCubeHelper::GetServerNode (uint32_t i) const
 {
+  NS_LOG_FUNCTION (this << i);
   return m_servers.Get (i);
 }
 
 Ptr<Node>
 PointToPointBCubeHelper::GetSwitchNode (uint32_t i, uint32_t j) const
 {
+  NS_LOG_FUNCTION (this << i << j);
   uint32_t numLevelSwitches = pow (m_numServers,m_numLevels);
   return m_switches.Get (i * numLevelSwitches + j);
 }
