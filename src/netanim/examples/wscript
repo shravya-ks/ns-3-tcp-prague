@@ -14,11 +14,11 @@ def build(bld):
     obj.source = 'star-animation.cc'
 
     obj = bld.create_ns3_program('bcube-animation',
-                                 ['netanim', 'applications', 'point-to-point-layout'])
+                                 ['netanim', 'applications', 'point-to-point-layout', 'nix-vector-routing'])
     obj.source = 'bcube-animation.cc'
 
     obj = bld.create_ns3_program('fattree-animation',
-                                 ['netanim', 'applications', 'point-to-point-layout'])
+                                 ['netanim', 'applications', 'point-to-point-layout', 'nix-vector-routing'])
     obj.source = 'fattree-animation.cc'
 
     obj = bld.create_ns3_program('wireless-animation',

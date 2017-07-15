@@ -86,7 +86,6 @@ PointToPointBCubeHelper::~PointToPointBCubeHelper ()
 void
 PointToPointBCubeHelper::InstallStack (InternetStackHelper stack)
 {
-  NS_LOG_FUNCTION (this << stack);
   stack.Install (m_servers);
   stack.Install (m_switches);
 }

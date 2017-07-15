@@ -28,6 +28,7 @@
 #include "ns3/applications-module.h"
 #include "ns3/point-to-point-layout-module.h"
 #include "ns3/ipv4-nix-vector-helper.h"
+#include "ns3/ipv4-static-routing.h"
 
 using namespace ns3;
 
