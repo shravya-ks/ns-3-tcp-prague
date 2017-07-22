@@ -156,7 +156,7 @@ PointToPointFatTreeHelper::BoundingBox (double ulx, double uly,
   double  yAdder = yDist / 4;  // 3 layers of switches and 1 layer of servers
 
   //Allot servers
-  double xLoc;
+  double xLoc = 0.0;
   double yLoc = yDist / 2;
   for (uint32_t i = 0; i < numServers; ++i)
     {

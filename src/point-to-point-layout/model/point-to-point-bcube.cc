@@ -129,7 +129,7 @@ PointToPointBCubeHelper::BoundingBox (double ulx, double uly,
   double yAdder = yDist / (m_numLevels + 2);
 
   // Place the servers
-  double xLoc;
+  double xLoc = 0.0;
   double yLoc = yDist / 2;
   for (uint32_t i = 0; i < numServers; ++i)
     {
