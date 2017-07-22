@@ -39,7 +39,7 @@ PointToPointFatTreeHelper::PointToPointFatTreeHelper (uint32_t numPods,
   : m_numPods (numPods)
 {
   // Bounds check
-  if (numPods < 0)
+  if (numPods == 0)
     {
       NS_FATAL_ERROR ("Need more pods for FatTree.");
     }
