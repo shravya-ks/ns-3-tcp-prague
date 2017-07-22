@@ -19,6 +19,8 @@
  *
  */
 
+// Define an object to create a BCube topology.
+
 #ifndef POINT_TO_POINT_BCUBE_HELPER_H
 #define POINT_TO_POINT_BCUBE_HELPER_H
 
@@ -62,9 +64,9 @@ public:
   ~PointToPointBCubeHelper ();
 
   /**
-   * \param row the row address of the switch desired
+   * \param row the row address of the desired switch
    *
-   * \param col the column address of the switch desired
+   * \param col the column address of the desired switch
    *
    * \returns a pointer to the switch specified by the
    *          (row, col) address
@@ -72,7 +74,7 @@ public:
   Ptr<Node> GetSwitchNode (uint32_t row, uint32_t col) const;
 
   /**
-   * \param col the column address of the server desired
+   * \param col the column address of the desired server
    *
    * \returns a pointer to the server specified by the
    *          column address
@@ -80,16 +82,17 @@ public:
   Ptr<Node> GetServerNode (uint32_t col) const;
 
   /**
-   * This returns an Ipv4 address at the switch specified by
-   * the (row, col) address.  Technically, a switch will have
+   * This returns an IPv4 address of the switch specified by
+   * the (row, col) address. Technically, a switch will have
    * multiple interfaces in the BCube; therefore, it also has
-   * multiple Ipv4 addresses.  This method only returns one of
-   * the addresses. If you picture the BCube, the address returned
-   * is the lowest index server connected to this switch.
+   * multiple IPv4 addresses. This method only returns one of
+   * the addresses. The address being returned belongs to an
+   * interface which connects the lowest index server to this
+   * switch.
    *
-   * \param row the row address of the switch desired
+   * \param row the row address of the desired switch
    *
-   * \param col the column address of the switch desired
+   * \param col the column address of the desired switch
    *
    * \returns Ipv4Address of one of the interfaces of the switch
    *          specified by the (row, col) address
@@ -97,16 +100,17 @@ public:
   Ipv4Address GetSwitchIpv4Address (uint32_t row, uint32_t col) const;
 
   /**
-   * This returns an Ipv6 address at the switch specified by
-   * the (row, col) address.  Technically, a switch will have
+   * This returns an IPv6 address at the switch specified by
+   * the (row, col) address. Technically, a switch will have
    * multiple interfaces in the BCube; therefore, it also has
-   * multiple Ipv6 addresses.  This method only returns one of
-   * the addresses. If you picture the BCube, the address returned
-   * is the lowest index server connected to this switch.
+   * multiple IPv6 addresses. This method only returns one of
+   * the addresses. The address being returned belongs to an
+   * interface which connects the lowest index server to this
+   * switch.
    *
-   * \param row the row address of the switch desired
+   * \param row the row address of the desired switch
    *
-   * \param col the column address of the switch desired
+   * \param col the column address of the desired switch
    *
    * \returns Ipv6Address of one of the interfaces of the switch
    *          specified by the (row, col) address
@@ -114,12 +118,12 @@ public:
   Ipv6Address GetSwitchIpv6Address (uint32_t row, uint32_t col) const;
 
   /**
-   * This returns an Ipv4 address at the server specified by
-   * the col address.  Technically, a server will have
-   * multiple interfaces in the BCube; therefore, it also has
-   * multiple Ipv4 addresses.  This method only returns one of
-   * the addresses. If you picture the BCube, the address returned
-   * is the switch at lowest level connected to this server.
+   * This returns an IPv4 address at the server specified by
+   * the col address. Technically, a server will have multiple
+   * interfaces in the BCube; therefore, it also has multiple
+   * IPv4 addresses. This method only returns one of the addresses.
+   * The address being returned belongs to an interface which
+   * connects the lowest level switch to this server.
    *
    * \param col the column address of the server desired
    *
@@ -129,12 +133,12 @@ public:
   Ipv4Address GetServerIpv4Address (uint32_t col) const;
 
   /**
-   * This returns an Ipv6 address at the server specified by
-   * the col address.  Technically, a server will have
-   * multiple interfaces in the BCube; therefore, it also has
-   * multiple Ipv6 addresses.  This method only returns one of
-   * the addresses. If you picture the BCube, the address returned
-   * is the switch at lowest level connected to this server.
+   * This returns an IPv6 address at the server specified by
+   * the col address. Technically, a server will have multiple
+   * interfaces in the BCube; therefore, it also has multiple
+   * IPv6 addresses. This method only returns one of the addresses.
+   * The address being returned belongs to an interface which
+   * connects the lowest level switch to this server.
    *
    * \param col the column address of the server desired
    *
@@ -150,7 +154,7 @@ public:
   void InstallStack (InternetStackHelper stack);
 
   /**
-   * Assigns Ipv4 addresses to all the interfaces of switch
+   * Assigns IPv4 addresses to all the interfaces of switch
    *
    * \param network an IPv4 address representing the network portion
    *                of the IPv4 Address
@@ -160,7 +164,7 @@ public:
   void AssignIpv4Addresses (Ipv4Address network, Ipv4Mask mask);
 
   /**
-   * Assigns Ipv6 addresses to all the interfaces of the switch
+   * Assigns IPv6 addresses to all the interfaces of the switch
    *
    * \param network an IPv6 address representing the network portion
    *                of the IPv6 Address
