@@ -18,7 +18,7 @@ def build(bld):
         'model/point-to-point-grid.h',
         'model/point-to-point-star.h',
         'model/point-to-point-bcube.h', 
-        'model/point-to-point-fattree.h',
+        'model/point-to-point-fat-tree.h',
         ]
 
     bld.ns3_python_bindings()

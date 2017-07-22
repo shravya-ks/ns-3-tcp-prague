@@ -19,7 +19,7 @@
  *
  */
 
-#include "ns3/point-to-point-fattree.h"
+#include "ns3/point-to-point-fat-tree.h"
 #include "ns3/internet-stack-helper.h"
 #include "ns3/point-to-point-helper.h"
 #include "ns3/constant-position-mobility-model.h"
