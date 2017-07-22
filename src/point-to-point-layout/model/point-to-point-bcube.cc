@@ -44,9 +44,9 @@ PointToPointBCubeHelper::PointToPointBCubeHelper (uint32_t nLevels,
     m_numServers (nServers)
 {
   // Bounds check
-  if (nLevels < 0 || nServers < 1)
+  if (nServers < 1)
     {
-      NS_FATAL_ERROR ("Insufficient number of nodes for BCube.");
+      NS_FATAL_ERROR ("Insufficient number of servers for BCube.");
     }
   uint32_t numLevelSwitches = pow (nServers, nLevels);
   m_levelSwitchDevices.resize ((nLevels + 1) * numLevelSwitches);
