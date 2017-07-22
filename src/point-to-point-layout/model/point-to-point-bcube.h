@@ -125,10 +125,10 @@ public:
    * The address being returned belongs to an interface which
    * connects the lowest level switch to this server.
    *
-   * \param col the column address of the server desired
+   * \param col the column address of the desired server
    *
    * \returns Ipv4Address of one of the interfaces of the server
-   *          specified by the col address
+   *          specified by the column address
    */
   Ipv4Address GetServerIpv4Address (uint32_t col) const;
 
@@ -140,10 +140,10 @@ public:
    * The address being returned belongs to an interface which
    * connects the lowest level switch to this server.
    *
-   * \param col the column address of the server desired
+   * \param col the column address of the desired server
    *
    * \returns Ipv6Address of one of the interfaces of the server
-   *          specified by the col address
+   *          specified by the column address
    */
   Ipv6Address GetServerIpv6Address (uint32_t col) const;
 
@@ -157,7 +157,7 @@ public:
    * Assigns IPv4 addresses to all the interfaces of switch
    *
    * \param network an IPv4 address representing the network portion
-   *                of the IPv4 Address
+   *                of the IPv4 address
    *
    * \param mask the mask length
    */
@@ -167,7 +167,7 @@ public:
    * Assigns IPv6 addresses to all the interfaces of the switch
    *
    * \param network an IPv6 address representing the network portion
-   *                of the IPv6 Address
+   *                of the IPv6 address
    *
    * \param prefix the prefix length
    */
