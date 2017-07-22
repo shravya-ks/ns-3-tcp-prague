@@ -43,6 +43,10 @@ PointToPointFatTreeHelper::PointToPointFatTreeHelper (uint32_t numPods,
     {
       NS_FATAL_ERROR ("Need more pods for FatTree.");
     }
+  if (numPods % 2 != 0)
+    {
+      NS_FATAL_ERROR ("Number of pods should be even in FatTree.");
+    }
 
   uint32_t numEdgeSwitches = numPods / 2;
   uint32_t numAggregateSwitches = numPods / 2;            // number of aggregation switch in a pod
@@ -122,6 +126,7 @@ void
 PointToPointFatTreeHelper::BoundingBox (double ulx, double uly,
                                         double lrx, double lry)
 {
+  NS_LOG_FUNCTION (this << ulx << uly << lrx << lry);
   double xDist;
   double yDist;
   if (lrx > ulx)
@@ -234,6 +239,7 @@ PointToPointFatTreeHelper::BoundingBox (double ulx, double uly,
 void
 PointToPointFatTreeHelper::AssignIpv4Addresses (Ipv4Address network, Ipv4Mask mask)
 {
+  NS_LOG_FUNCTION (this << network << mask);
   Ipv4AddressGenerator::Init (network, mask);
   Ipv4Address v4network;
   Ipv4AddressHelper addrHelper;
@@ -282,6 +288,7 @@ PointToPointFatTreeHelper::AssignIpv4Addresses (Ipv4Address network, Ipv4Mask ma
 void
 PointToPointFatTreeHelper::AssignIpv6Addresses (Ipv6Address addrBase, Ipv6Prefix prefix)
 {
+  NS_LOG_FUNCTION (this << addrBase << prefix);
   Ipv6AddressGenerator::Init (addrBase, prefix);
   Ipv6Address v6network;
   Ipv6AddressHelper addrHelper;
@@ -330,72 +337,84 @@ PointToPointFatTreeHelper::AssignIpv6Addresses (Ipv6Address addrBase, Ipv6Prefix
 Ipv4Address
 PointToPointFatTreeHelper::GetServerIpv4Address (uint32_t i) const
 {
+  NS_LOG_FUNCTION (this << i);
   return m_serverInterfaces.GetAddress (i);
 }
 
 Ipv4Address
 PointToPointFatTreeHelper::GetEdgeSwitchIpv4Address (uint32_t i) const
 {
+  NS_LOG_FUNCTION (this << i);
   return m_edgeSwitchInterfaces.GetAddress (i);
 }
 
 Ipv4Address
 PointToPointFatTreeHelper::GetAggregateSwitchIpv4Address (uint32_t i) const
 {
+  NS_LOG_FUNCTION (this << i);
   return m_aggregateSwitchInterfaces.GetAddress (i);
 }
 
 Ipv4Address
 PointToPointFatTreeHelper::GetCoreSwitchIpv4Address (uint32_t i) const
 {
+  NS_LOG_FUNCTION (this << i);
   return m_coreSwitchInterfaces.GetAddress (i);
 }
 
 Ipv6Address
 PointToPointFatTreeHelper::GetServerIpv6Address (uint32_t i) const
 {
+  NS_LOG_FUNCTION (this << i);
   return m_serverInterfaces6.GetAddress (i, 1);
 }
 
 Ipv6Address
 PointToPointFatTreeHelper::GetEdgeSwitchIpv6Address (uint32_t i) const
 {
+  NS_LOG_FUNCTION (this << i);
   return m_edgeSwitchInterfaces6.GetAddress (i, 1);
 }
 
 Ipv6Address
 PointToPointFatTreeHelper::GetAggregateSwitchIpv6Address (uint32_t i) const
 {
+  NS_LOG_FUNCTION (this << i);
   return m_aggregateSwitchInterfaces6.GetAddress (i, 1);
 }
 
 Ipv6Address
 PointToPointFatTreeHelper::GetCoreSwitchIpv6Address (uint32_t i) const
 {
+  NS_LOG_FUNCTION (this << i);
   return m_coreSwitchInterfaces6.GetAddress (i, 1);
 }
 
 Ptr<Node>
 PointToPointFatTreeHelper::GetServerNode (uint32_t i) const
 {
+  NS_LOG_FUNCTION (this << i);
   return m_servers.Get (i);
 }
 
 Ptr<Node>
 PointToPointFatTreeHelper::GetEdgeSwitchNode (uint32_t i) const
 {
+  NS_LOG_FUNCTION (this << i);
   return m_edgeSwitches.Get (i);
 }
 
 Ptr<Node>
 PointToPointFatTreeHelper::GetAggregateSwitchNode (uint32_t i) const
 {
+  NS_LOG_FUNCTION (this << i);
   return m_aggregateSwitches.Get (i);
 }
 
 Ptr<Node>
 PointToPointFatTreeHelper::GetCoreSwitchNode (uint32_t i) const
 {
+  NS_LOG_FUNCTION (this << i);
   return m_coreSwitches.Get (i);
 }
 
