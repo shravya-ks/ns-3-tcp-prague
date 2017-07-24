@@ -19,16 +19,19 @@
  *
  */
 
-#include "ns3/point-to-point-fat-tree.h"
-#include "ns3/internet-stack-helper.h"
-#include "ns3/point-to-point-helper.h"
-#include "ns3/constant-position-mobility-model.h"
-#include "ns3/point-to-point-net-device.h"
+// Implement an object to create a Fat tree topology.
+
 #include "ns3/string.h"
 #include "ns3/vector.h"
 #include "ns3/log.h"
+
+#include "ns3/point-to-point-fat-tree.h"
+#include "ns3/point-to-point-helper.h"
+#include "ns3/point-to-point-net-device.h"
+#include "ns3/internet-stack-helper.h"
 #include "ns3/ipv4-address-generator.h"
 #include "ns3/ipv6-address-generator.h"
+#include "ns3/constant-position-mobility-model.h"
 
 namespace ns3 {
 
@@ -49,10 +52,10 @@ PointToPointFatTreeHelper::PointToPointFatTreeHelper (uint32_t numPods,
     }
 
   uint32_t numEdgeSwitches = numPods / 2;
-  uint32_t numAggregateSwitches = numPods / 2;            // number of aggregation switch in a pod
+  uint32_t numAggregateSwitches = numPods / 2;            // number of aggregate switches in a pod
   uint32_t numGroups = numPods / 2;                       // number of group of core switches
-  uint32_t numCoreSwitches = numPods / 2;                 // number of core switch in a group
-  uint32_t numServers = numPods * numPods * numPods / 4;      // number of hosts in the entire network
+  uint32_t numCoreSwitches = numPods / 2;                 // number of core switches in a group
+  uint32_t numServers = numPods * numPods * numPods / 4;  // number of servers in the entire network
   m_edgeSwitchDevices.resize (numPods * numEdgeSwitches);
   m_aggregateSwitchDevices.resize (numPods * numAggregateSwitches);
   m_coreSwitchDevices.resize (numGroups * numCoreSwitches);
@@ -64,7 +67,7 @@ PointToPointFatTreeHelper::PointToPointFatTreeHelper (uint32_t numPods,
 
   InternetStackHelper stack;
 
-  //Connect servers to edge switches
+  // Connect servers to edge switches
   uint32_t hostId = 0;
   for (uint32_t i = 0; i < numPods * numPods / 2; i++)
     {
@@ -77,7 +80,7 @@ PointToPointFatTreeHelper::PointToPointFatTreeHelper (uint32_t numPods,
         }
     }
 
-  //Connect edge switches to aggregate switches
+  // Connect edge switches to aggregate switches
   for (uint32_t i = 0; i < numPods; i++)
     {
       for (uint32_t j = 0; j < numAggregateSwitches; j++)
@@ -92,7 +95,7 @@ PointToPointFatTreeHelper::PointToPointFatTreeHelper (uint32_t numPods,
         }
     }
 
-  //Connect aggregate switches to core switches
+  // Connect aggregate switches to core switches
   for (uint32_t i = 0; i < numGroups; i++)
     {
       for (uint32_t j = 0; j < numCoreSwitches; j++)
@@ -155,12 +158,11 @@ PointToPointFatTreeHelper::BoundingBox (double ulx, double uly,
   double xCoreSwitchAdder = xDist / (numSwitches / 2);
   double  yAdder = yDist / 4;  // 3 layers of switches and 1 layer of servers
 
-  //Allot servers
+  // Place the servers
   double xLoc = 0.0;
   double yLoc = yDist / 2;
   for (uint32_t i = 0; i < numServers; ++i)
     {
-      //xLoc = xDist / 2;
       Ptr<Node> node = m_servers.Get (i);
       Ptr<ConstantPositionMobilityModel> loc = node->GetObject<ConstantPositionMobilityModel> ();
       if (loc == 0)
@@ -182,7 +184,7 @@ PointToPointFatTreeHelper::BoundingBox (double ulx, double uly,
 
   yLoc -= yAdder;
 
-  //Allot edge switches
+  // Place the edge switches
   xLoc = xEdgeSwitchAdder;
   for (uint32_t i = 0; i < numSwitches; ++i)
     {
@@ -200,7 +202,7 @@ PointToPointFatTreeHelper::BoundingBox (double ulx, double uly,
 
   yLoc -= yAdder;
 
-  //Allot aggregate switches
+  // Place the aggregate switches
   xLoc = xAggregateSwitchAdder;
   for (uint32_t i = 0; i < numSwitches; ++i)
     {
@@ -218,7 +220,7 @@ PointToPointFatTreeHelper::BoundingBox (double ulx, double uly,
 
   yLoc -= yAdder;
 
-  //Allot aggregate switches
+  // Place the core switches
   xLoc = xCoreSwitchAdder;
   for (uint32_t i = 0; i < numSwitches / 2; ++i)
     {
@@ -234,7 +236,6 @@ PointToPointFatTreeHelper::BoundingBox (double ulx, double uly,
       xLoc += 2 * xCoreSwitchAdder;
     }
 }
-
 
 void
 PointToPointFatTreeHelper::AssignIpv4Addresses (Ipv4Address network, Ipv4Mask mask)
@@ -283,7 +284,6 @@ PointToPointFatTreeHelper::AssignIpv4Addresses (Ipv4Address network, Ipv4Mask ma
         }
     }
 }
-
 
 void
 PointToPointFatTreeHelper::AssignIpv6Addresses (Ipv6Address addrBase, Ipv6Prefix prefix)

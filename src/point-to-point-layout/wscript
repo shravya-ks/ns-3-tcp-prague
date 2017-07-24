@@ -8,7 +8,7 @@ def build(bld):
         'model/point-to-point-grid.cc',
         'model/point-to-point-star.cc',
         'model/point-to-point-bcube.cc',
-        'model/point-to-point-fattree.cc',
+        'model/point-to-point-fat-tree.cc',
         ]
 
     headers = bld(features='ns3header')
