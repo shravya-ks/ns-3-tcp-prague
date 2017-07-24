@@ -17,9 +17,9 @@ def build(bld):
                                  ['netanim', 'applications', 'point-to-point-layout', 'nix-vector-routing'])
     obj.source = 'bcube-animation.cc'
 
-    obj = bld.create_ns3_program('fattree-animation',
+    obj = bld.create_ns3_program('fat-tree-animation',
                                  ['netanim', 'applications', 'point-to-point-layout', 'nix-vector-routing'])
-    obj.source = 'fattree-animation.cc'
+    obj.source = 'fat-tree-animation.cc'
 
     obj = bld.create_ns3_program('wireless-animation',
                                  ['netanim', 'applications', 'point-to-point', 'csma', 'wifi', 'mobility', 'network'])

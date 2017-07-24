@@ -18,19 +18,22 @@
  * Authors: Shravya K.S. <shravya.ks0@gmail.com>
  *
  */
+
 #include <iostream>
 
 #include "ns3/core-module.h"
 #include "ns3/network-module.h"
 #include "ns3/internet-module.h"
 #include "ns3/point-to-point-module.h"
+#include "ns3/point-to-point-layout-module.h"
 #include "ns3/netanim-module.h"
 #include "ns3/applications-module.h"
-#include "ns3/point-to-point-layout-module.h"
 #include "ns3/ipv4-nix-vector-helper.h"
 #include "ns3/ipv4-static-routing.h"
 
 using namespace ns3;
+
+NS_LOG_COMPONENT_DEFINE ("FatTreeAnimation");
 
 int main (int argc, char *argv[])
 {
@@ -38,16 +41,17 @@ int main (int argc, char *argv[])
   Config::SetDefault ("ns3::OnOffApplication::DataRate", StringValue ("500kb/s"));
 
   uint32_t    nPods = 4;
-  std::string animFile = "fattree-animation.xml";   // Name of file for animation output
+  std::string animFile = "fat-tree-animation.xml";   // Name of file for animation output
 
   CommandLine cmd;
   cmd.AddValue ("nPods", "Number of pods", nPods);
-  cmd.AddValue ("animFile",  "File Name for Animation Output", animFile);
-
+  cmd.AddValue ("animFile", "File Name for Animation Output", animFile);
   cmd.Parse (argc,argv);
+
   InternetStackHelper internet;
   Ipv4NixVectorHelper nixRouting;
   Ipv4StaticRoutingHelper staticRouting;
+
   Ipv4ListRoutingHelper list;
   list.Add (staticRouting, 0);
   list.Add (nixRouting, 10);
@@ -92,7 +96,7 @@ int main (int argc, char *argv[])
   anim.EnablePacketMetadata (); // Optional
   anim.EnableIpv4L3ProtocolCounters (Seconds (0), Seconds (10)); // Optional
 
-  // Set up the acutal simulation
+  // Set up the actual simulation
   Ipv4GlobalRoutingHelper::PopulateRoutingTables ();
 
   Simulator::Run ();
