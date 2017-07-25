@@ -67,6 +67,7 @@ public:
   typedef struct
   {
     uint32_t unforcedDrop;      //!< Early probability drops: proactive
+    uint32_t unforcedMark;      //!< Early probability marks: proactive
     uint32_t forcedDrop;        //!< Drops due to queue limit: reactive
   } Stats;
 
@@ -129,6 +130,13 @@ public:
    * \return the number of stream indices assigned by this model
    */
   int64_t AssignStreams (int64_t stream);
+ 
+  /**
+   * \brief Set the value of m_useDualQ and enable ECN functionality of the router if useDualQ is true.
+   *
+   * \param useDualQ The value of UseDualQ.
+   */
+  void SetDualQ (bool useDualQ);
 
 protected:
   /**
@@ -172,6 +180,8 @@ private:
   double m_a;                                   //!< Parameter to PI Square controller
   double m_b;                                   //!< Parameter to PI Square controller
   uint32_t m_dqThreshold;                       //!< Minimum queue size in bytes before dequeue rate is measured
+  bool m_useDualQ;                              //!< True if DualQ Framework is used
+  bool m_useEcn;                                //!< True if ECN is used (packets are marked instead of being dropped)
 
   // ** Variables maintained by PI Square
   double m_dropProb;                            //!< Variable used in calculation of drop probability

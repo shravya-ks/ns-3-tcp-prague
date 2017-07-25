@@ -202,6 +202,13 @@ public:
    */
   virtual bool Mark (void) = 0;
 
+  /**
+   * \brief Checks if the packet is of Scalable traffic when DualQ AQM Framework is used
+   *
+   * \return true if the packet is of Scalable traffic, false otherwise
+   */
+  virtual bool IsScalable (void);
+
 private:
   /**
    * \brief Default constructor

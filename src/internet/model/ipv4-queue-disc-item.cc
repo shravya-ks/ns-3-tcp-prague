@@ -94,6 +94,18 @@ Ipv4QueueDiscItem::Mark (void)
 
 
 bool
+Ipv4QueueDiscItem::IsScalable (void)
+{
+  NS_LOG_FUNCTION (this);
+  if (!m_headerAdded && m_header.GetEcn () == Ipv4Header::ECN_ECT1)
+    {
+      return true;
+    }
+  return false;
+}
+
+
+bool
 Ipv4QueueDiscItem::GetUint8Value (QueueItem::Uint8Values field, uint8_t& value) const
 {
   bool ret = false;

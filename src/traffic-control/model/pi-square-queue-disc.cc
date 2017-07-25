@@ -86,6 +86,16 @@ TypeId PiSquareQueueDisc::GetTypeId (void)
                    TimeValue (Seconds (0.02)),
                    MakeTimeAccessor (&PiSquareQueueDisc::m_qDelayRef),
                    MakeTimeChecker ())
+    .AddAttribute ("UseDualQ",
+                   "True to use DualQ Framework",
+                   BooleanValue (false),
+                   MakeBooleanAccessor (&PiSquareQueueDisc::SetDualQ),
+                   MakeBooleanChecker ())
+    .AddAttribute ("UseEcn",
+                   "True to use ECN (packets are marked instead of being dropped)",
+                   BooleanValue (false),
+                   MakeBooleanAccessor (&PiSquareQueueDisc::m_useEcn),
+                   MakeBooleanChecker ())
   ;
 
   return tid;
@@ -132,6 +142,18 @@ PiSquareQueueDisc::SetQueueLimit (uint32_t lim)
 {
   NS_LOG_FUNCTION (this << lim);
   m_queueLimit = lim;
+}
+
+void
+PiSquareQueueDisc::SetDualQ (bool useDualQ)
+{
+  NS_LOG_FUNCTION (this);
+  m_useDualQ = useDualQ;
+  //For DualQ framework, we require router to use ECN
+  if (useDualQ == true)
+    {
+      m_useEcn = true;
+    }
 }
 
 uint32_t
@@ -192,9 +214,13 @@ PiSquareQueueDisc::DoEnqueue (Ptr<QueueDiscItem> item)
   else if (DropEarly (item, nQueued))
     {
       // Early probability drop: proactive
-      Drop (item);
-      m_stats.unforcedDrop++;
-      return false;
+      if (!m_useEcn || !item->Mark ())
+        {
+          Drop (item);
+          m_stats.unforcedDrop++;
+          return false;
+        }
+      m_stats.unforcedMark++; 
     }
 
   // No drop
@@ -247,10 +273,21 @@ bool PiSquareQueueDisc::DropEarly (Ptr<QueueDiscItem> item, uint32_t qSize)
       return false;
     }
 
-  // Apply the squared drop probability
-  if (u > p * p)
+  if (m_useDualQ && item->IsScalable ())
     {
-      earlyDrop = false;
+       //Apply linear probability for scalable traffic
+       if (u > p)
+         {
+           earlyDrop = false;
+         }
+    }
+  else 
+    {
+       // Apply the squared drop probability
+       if (u > p * p)
+        {
+          earlyDrop = false;
+        }
     }
   if (!earlyDrop)
     {

@@ -93,6 +93,17 @@ Ipv6QueueDiscItem::Mark (void)
 }
 
 bool
+Ipv6QueueDiscItem::IsScalable (void)
+{
+  NS_LOG_FUNCTION (this);
+  if (!m_headerAdded && m_header.GetEcn () == Ipv6Header::ECN_ECT1)
+    {
+      return true;
+    }
+  return false;
+}
+
+bool
 Ipv6QueueDiscItem::GetUint8Value (QueueItem::Uint8Values field, uint8_t& value) const
 {
   bool ret = false;

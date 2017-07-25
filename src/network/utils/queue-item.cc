@@ -125,4 +125,10 @@ QueueDiscItem::Print (std::ostream& os) const
   ;
 }
 
+bool
+QueueDiscItem::IsScalable (void)
+{
+  return false;
+}
+
 } // namespace ns3
