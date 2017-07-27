@@ -37,6 +37,7 @@ public:
   virtual ~PiSquareQueueDiscTestItem ();
   virtual void AddHeader (void);
   virtual bool Mark(void);
+  virtual bool IsScalable(void);
 
 private:
   PiSquareQueueDiscTestItem ();
@@ -64,14 +65,102 @@ PiSquareQueueDiscTestItem::Mark (void)
   return false;
 }
 
+bool
+PiSquareQueueDiscTestItem::IsScalable (void)
+{
+  return false;
+}
+
+class ScalableQueueDiscTestItem : public QueueDiscItem
+{
+public:
+  ScalableQueueDiscTestItem (Ptr<Packet> p, const Address & addr, uint16_t protocol);
+  virtual ~ScalableQueueDiscTestItem ();
+  virtual void AddHeader (void);
+  virtual bool Mark(void);
+  virtual bool IsScalable (void);
+
+private:
+  ScalableQueueDiscTestItem ();
+  ScalableQueueDiscTestItem (const ScalableQueueDiscTestItem &);
+  ScalableQueueDiscTestItem &operator = (const ScalableQueueDiscTestItem &);
+};
+
+ScalableQueueDiscTestItem::ScalableQueueDiscTestItem (Ptr<Packet> p, const Address & addr, uint16_t protocol)
+  : QueueDiscItem (p, addr, protocol)
+{
+}
+
+ScalableQueueDiscTestItem::~ScalableQueueDiscTestItem ()
+{
+}
+
+void
+ScalableQueueDiscTestItem::AddHeader (void)
+{
+}
+
+bool
+ScalableQueueDiscTestItem::Mark (void)
+{
+  return true;
+}
+
+bool 
+ScalableQueueDiscTestItem::IsScalable (void)
+{
+  return true;
+}
+
+class ClassicQueueDiscTestItem : public QueueDiscItem
+{
+public:
+  ClassicQueueDiscTestItem (Ptr<Packet> p, const Address & addr, uint16_t protocol);
+  virtual ~ClassicQueueDiscTestItem ();
+  virtual void AddHeader (void);
+  virtual bool Mark(void);
+  virtual bool IsScalable (void);
+
+private:
+  ClassicQueueDiscTestItem ();
+  ClassicQueueDiscTestItem (const ClassicQueueDiscTestItem &);
+  ClassicQueueDiscTestItem &operator = (const ClassicQueueDiscTestItem &);
+};
+
+ClassicQueueDiscTestItem::ClassicQueueDiscTestItem (Ptr<Packet> p, const Address & addr, uint16_t protocol)
+  : QueueDiscItem (p, addr, protocol)
+{
+}
+
+ClassicQueueDiscTestItem::~ClassicQueueDiscTestItem ()
+{
+}
+
+void
+ClassicQueueDiscTestItem::AddHeader (void)
+{
+}
+
+bool
+ClassicQueueDiscTestItem::Mark (void)
+{
+  return true;
+}
+
+bool 
+ClassicQueueDiscTestItem::IsScalable (void)
+{
+  return false;
+}
+
 class PiSquareQueueDiscTestCase : public TestCase
 {
 public:
   PiSquareQueueDiscTestCase ();
   virtual void DoRun (void);
 private:
-  void Enqueue (Ptr<PiSquareQueueDisc> queue, uint32_t size, uint32_t nPkt);
-  void EnqueueWithDelay (Ptr<PiSquareQueueDisc> queue, uint32_t size, uint32_t nPkt);
+  void Enqueue (Ptr<PiSquareQueueDisc> queue, uint32_t size, uint32_t nPkt, StringValue trafficType);
+  void EnqueueWithDelay (Ptr<PiSquareQueueDisc> queue, uint32_t size, uint32_t nPkt, StringValue trafficType);
   void Dequeue (Ptr<PiSquareQueueDisc> queue, uint32_t nPkt);
   void DequeueWithDelay (Ptr<PiSquareQueueDisc> queue, double delay, uint32_t nPkt);
   void RunPiSquareTest (StringValue mode);
@@ -182,7 +271,7 @@ PiSquareQueueDiscTestCase::RunPiSquareTest (StringValue mode)
   NS_TEST_EXPECT_MSG_EQ (queue->SetAttributeFailSafe ("QueueDelayReference", TimeValue (Seconds (0.02))), true,
                          "Verify that we can actually set the attribute QueueDelayReference");
   queue->Initialize ();
-  EnqueueWithDelay (queue, pktSize, 400);
+  EnqueueWithDelay (queue, pktSize, 400, StringValue("NonDualQ"));
   DequeueWithDelay (queue, 0.012, 400);
   Simulator::Stop (Seconds (8.0));
   Simulator::Run ();
@@ -211,7 +300,7 @@ PiSquareQueueDiscTestCase::RunPiSquareTest (StringValue mode)
   NS_TEST_EXPECT_MSG_EQ (queue->SetAttributeFailSafe ("QueueDelayReference", TimeValue (Seconds (0.08))), true,
                          "Verify that we can actually set the attribute QueueDelayReference");
   queue->Initialize ();
-  EnqueueWithDelay (queue, pktSize, 400);
+  EnqueueWithDelay (queue, pktSize, 400, StringValue("NonDualQ"));
   DequeueWithDelay (queue, 0.012, 400);
   Simulator::Stop (Seconds (8.0));
   Simulator::Run ();
@@ -240,34 +329,103 @@ PiSquareQueueDiscTestCase::RunPiSquareTest (StringValue mode)
   NS_TEST_EXPECT_MSG_EQ (queue->SetAttributeFailSafe ("QueueDelayReference", TimeValue (Seconds (0.02))), true,
                          "Verify that we can actually set the attribute QueueDelayReference");
   queue->Initialize ();
-  EnqueueWithDelay (queue, pktSize, 400);
+  EnqueueWithDelay (queue, pktSize, 400, StringValue("NonDualQ"));
   DequeueWithDelay (queue, 0.015, 400); // delay between two successive dequeue events is increased
   Simulator::Stop (Seconds (8.0));
   Simulator::Run ();
   st = StaticCast<PiSquareQueueDisc> (queue)->GetStats ();
   uint32_t test4 = st.unforcedDrop;
-  NS_TEST_EXPECT_MSG_GT (test4, test2, "Test 4 should have more unforced drops than test 2");
+  NS_TEST_EXPECT_MSG_GT (test4, test2, "Test 4 should have more unforced drops than test 2");  
   NS_TEST_EXPECT_MSG_EQ (st.forcedDrop, 0, "There should zero forced drops");
+
+  // test 5: Tests for DualQ Framework
+  Ptr<PiSquareQueueDisc> queue1 = CreateObject<PiSquareQueueDisc> ();
+  Ptr<PiSquareQueueDisc> queue2 = CreateObject<PiSquareQueueDisc> ();
+  NS_TEST_EXPECT_MSG_EQ (queue1->SetAttributeFailSafe ("Mode", mode), true,
+                         "Verify that we can actually set the attribute Mode");
+  NS_TEST_EXPECT_MSG_EQ (queue2->SetAttributeFailSafe ("Mode", mode), true,
+                         "Verify that we can actually set the attribute Mode");
+  NS_TEST_EXPECT_MSG_EQ (queue1->SetAttributeFailSafe ("QueueLimit", UintegerValue (qSize)), true,
+                         "Verify that we can actually set the attribute QueueLimit");
+  NS_TEST_EXPECT_MSG_EQ (queue2->SetAttributeFailSafe ("QueueLimit", UintegerValue (qSize)), true,
+                         "Verify that we can actually set the attribute QueueLimit");
+  NS_TEST_EXPECT_MSG_EQ (queue1->SetAttributeFailSafe ("A", DoubleValue (0.125)), true,
+                         "Verify that we can actually set the attribute A");
+  NS_TEST_EXPECT_MSG_EQ (queue2->SetAttributeFailSafe ("A", DoubleValue (0.125)), true,
+                         "Verify that we can actually set the attribute A");
+  NS_TEST_EXPECT_MSG_EQ (queue1->SetAttributeFailSafe ("B", DoubleValue (1.25)), true,
+                         "Verify that we can actually set the attribute B");
+  NS_TEST_EXPECT_MSG_EQ (queue2->SetAttributeFailSafe ("B", DoubleValue (1.25)), true,
+                         "Verify that we can actually set the attribute B");
+  NS_TEST_EXPECT_MSG_EQ (queue1->SetAttributeFailSafe ("Tupdate", TimeValue (Seconds (0.03))), true,
+                         "Verify that we can actually set the attribute Tupdate");
+   NS_TEST_EXPECT_MSG_EQ (queue2->SetAttributeFailSafe ("Tupdate", TimeValue (Seconds (0.03))), true,
+                         "Verify that we can actually set the attribute Tupdate");
+  NS_TEST_EXPECT_MSG_EQ (queue1->SetAttributeFailSafe ("Supdate", TimeValue (Seconds (0.0))), true,
+                         "Verify that we can actually set the attribute Supdate");
+   NS_TEST_EXPECT_MSG_EQ (queue2->SetAttributeFailSafe ("Tupdate", TimeValue (Seconds (0.03))), true,
+                         "Verify that we can actually set the attribute Tupdate");
+  NS_TEST_EXPECT_MSG_EQ (queue1->SetAttributeFailSafe ("DequeueThreshold", UintegerValue (10000)), true,
+                         "Verify that we can actually set the attribute DequeueThreshold");
+   NS_TEST_EXPECT_MSG_EQ (queue2->SetAttributeFailSafe ("Tupdate", TimeValue (Seconds (0.03))), true,
+                         "Verify that we can actually set the attribute Tupdate");
+  NS_TEST_EXPECT_MSG_EQ (queue1->SetAttributeFailSafe ("QueueDelayReference", TimeValue (Seconds (0.02))), true,
+                         "Verify that we can actually set the attribute QueueDelayReference");
+  NS_TEST_EXPECT_MSG_EQ (queue2->SetAttributeFailSafe ("Tupdate", TimeValue (Seconds (0.03))), true,
+                         "Verify that we can actually set the attribute Tupdate");
+  NS_TEST_EXPECT_MSG_EQ (queue1->SetAttributeFailSafe ("UseDualQ", BooleanValue (true)), true,
+                         "Verify that we can actually set the attribute UseDualQ");
+  NS_TEST_EXPECT_MSG_EQ (queue2->SetAttributeFailSafe ("UseDualQ", BooleanValue (true)), true,
+                         "Verify that we can actually set the attribute UseDualQ");
+  queue1->Initialize ();
+  queue2->Initialize ();
+  EnqueueWithDelay (queue1, pktSize, 400, StringValue("Scalable"));
+  EnqueueWithDelay (queue2, pktSize, 400, StringValue("Classic"));
+  DequeueWithDelay (queue1, 0.015, 400); 
+  DequeueWithDelay (queue2, 0.015, 400);
+  Simulator::Stop (Seconds (8.0));
+  Simulator::Run ();
+  PiSquareQueueDisc::Stats st1 = StaticCast<PiSquareQueueDisc> (queue1)->GetStats ();
+  PiSquareQueueDisc::Stats st2 = StaticCast<PiSquareQueueDisc> (queue2)->GetStats ();
+  uint32_t mark1 = st1.unforcedMark;
+  uint32_t mark2 = st2.unforcedMark;
+  NS_TEST_EXPECT_MSG_GT (mark1, mark2, "Packets of Scalable traffic should have more unforced marks than packets of Classic traffic");  
+  NS_TEST_EXPECT_MSG_EQ (st1.unforcedDrop, 0, "There should be zero unforced drops for packets of Scalable traffic");
+  NS_TEST_EXPECT_MSG_EQ (st2.unforcedDrop, 0, "There should be zero unforced drops for packets of Classic traffic when its ECN capable");
+
 }
 
 void
-PiSquareQueueDiscTestCase::Enqueue (Ptr<PiSquareQueueDisc> queue, uint32_t size, uint32_t nPkt)
+PiSquareQueueDiscTestCase::Enqueue (Ptr<PiSquareQueueDisc> queue, uint32_t size, uint32_t nPkt, StringValue trafficType)
 {
   Address dest;
   for (uint32_t i = 0; i < nPkt; i++)
     {
-      queue->Enqueue (Create<PiSquareQueueDiscTestItem> (Create<Packet> (size), dest, 0));
+      //NS_TEST_EXPECT_MSG_EQ (trafficType.Get(), "Scalable", "Works");
+      if (trafficType.Get() == "Scalable")
+        {
+          NS_TEST_EXPECT_MSG_EQ (trafficType.Get(), "Scalable", "Works");
+          queue->Enqueue (Create<ScalableQueueDiscTestItem> (Create<Packet> (size), dest, 0));
+        }
+      else if (trafficType.Get() == "Classic")
+        {
+          queue->Enqueue (Create<ClassicQueueDiscTestItem> (Create<Packet> (size), dest, 0));
+        }
+      else
+        {
+          queue->Enqueue (Create<PiSquareQueueDiscTestItem> (Create<Packet> (size), dest, 0));
+        }
     }
 }
 
 void
-PiSquareQueueDiscTestCase::EnqueueWithDelay (Ptr<PiSquareQueueDisc> queue, uint32_t size, uint32_t nPkt)
+PiSquareQueueDiscTestCase::EnqueueWithDelay (Ptr<PiSquareQueueDisc> queue, uint32_t size, uint32_t nPkt, StringValue trafficType)
 {
   Address dest;
   double delay = 0.01;  // enqueue packets with delay
   for (uint32_t i = 0; i < nPkt; i++)
     {
-      Simulator::Schedule (Time (Seconds ((i + 1) * delay)), &PiSquareQueueDiscTestCase::Enqueue, this, queue, size, 1);
+      Simulator::Schedule (Time (Seconds ((i + 1) * delay)), &PiSquareQueueDiscTestCase::Enqueue, this, queue, size, 1, trafficType);
     }
 }
 
