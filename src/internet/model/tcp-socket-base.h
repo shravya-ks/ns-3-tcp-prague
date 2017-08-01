@@ -519,7 +519,11 @@ public:
    * \brief Sets the variable m_ecn true to use ECN functionality
    */
   void SetEcn();
-  
+
+  /**
+   * \brief Sets the variable m_dualQueue true to use DualQueue functionality
+   */
+  void SetDualQueue();
   
   // Necessary implementations of null functions from ns3::Socket
   virtual enum SocketErrno GetErrno (void) const;    // returns m_errno
@@ -1231,6 +1235,8 @@ protected:
   TracedValue<SequenceNumber32> m_ecnEchoSeq; //!< Sequence number of the last received ECN Echo
   TracedValue<SequenceNumber32> m_ecnCESeq;   //!< Sequence number of the last received Congestion Experienced
   TracedValue<SequenceNumber32> m_ecnCWRSeq;  //!< Sequence number of the last sent CWR 
+  
+  bool  m_dualQueue; //Socket DualQueue capability
 };
 
 /**

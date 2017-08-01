@@ -139,6 +139,10 @@ TcpSocketBase::GetTypeId (void)
                     BooleanValue (false),
                     MakeBooleanAccessor (&TcpSocketBase::m_ecn),
                     MakeBooleanChecker ())
+    .AddAttribute ("UseDualQueue", "True to use DualQueue functionality",
+                    BooleanValue (false),
+                    MakeBooleanAccessor (&TcpSocketBase::m_dualQueue),
+                    MakeBooleanChecker ())
     .AddTraceSource ("RTO",
                      "Retransmission timeout",
                      MakeTraceSourceAccessor (&TcpSocketBase::m_rto),
@@ -454,7 +458,8 @@ TcpSocketBase::TcpSocketBase (const TcpSocketBase& sock)
     m_rxTrace (sock.m_rxTrace),
     m_ecn (sock.m_ecn),
     m_ecnEchoSeq (sock.m_ecnEchoSeq),
-    m_ecnCWRSeq (sock.m_ecnCWRSeq)
+    m_ecnCWRSeq (sock.m_ecnCWRSeq),
+    m_dualQueue (sock.m_dualQueue)
 {
   NS_LOG_FUNCTION (this);
   NS_LOG_LOGIC ("Invoked the copy constructor");
@@ -2505,7 +2510,14 @@ TcpSocketBase::SendEmptyPacket (uint8_t flags)
       NS_LOG_LOGIC (" ECT bits should be set on pure ACK and SYN packets in DCTCP");
       if (m_congestionControl->GetName () == "TcpDctcp" && (GetIpTos () & 0x3) == 0)
         { 
-          ipTosTag.SetTos (GetIpTos () | 0x2);
+          if (m_dualQueue)
+            {
+              ipTosTag.SetTos (GetIpTos () | 0x1);
+            }
+          else
+            {
+              ipTosTag.SetTos (GetIpTos () | 0x2);
+            }
         }
       else
         {
@@ -2518,7 +2530,14 @@ TcpSocketBase::SendEmptyPacket (uint8_t flags)
       if (m_congestionControl->GetName () == "TcpDctcp")
         {
           SocketIpTosTag ipTosTag;
-          ipTosTag.SetTos (0x02);
+          if (m_dualQueue)
+            {
+              ipTosTag.SetTos (0x1);
+            }
+          else
+            {
+              ipTosTag.SetTos (0x2);
+            }
           p->AddPacketTag (ipTosTag);
         }
     }
@@ -2528,7 +2547,14 @@ TcpSocketBase::SendEmptyPacket (uint8_t flags)
       SocketIpv6TclassTag ipTclassTag;
       if (m_congestionControl->GetName () == "TcpDctcp" && (GetIpv6Tclass () & 0x3) == 0)
         {
-          ipTclassTag.SetTclass (GetIpv6Tclass () | 0x2);
+          if (m_dualQueue)
+            {
+              ipTclassTag.SetTclass (GetIpv6Tclass () | 0x1);
+            }
+          else
+            {
+              ipTclassTag.SetTclass (GetIpv6Tclass () | 0x2);
+            }
         }
       else
         {
@@ -2541,7 +2567,14 @@ TcpSocketBase::SendEmptyPacket (uint8_t flags)
       if (m_congestionControl->GetName () == "TcpDctcp")
         {
           SocketIpv6TclassTag ipTclassTag;
-          ipTclassTag.SetTclass (0x02);
+          if (m_dualQueue)
+            {
+              ipTclassTag.SetTclass (0x1);
+            }
+          else
+            {
+              ipTclassTag.SetTclass (0x2);
+            }
           p->AddPacketTag (ipTclassTag);
         }
     }
@@ -2894,7 +2927,22 @@ TcpSocketBase::SendDataPacket (SequenceNumber32 seq, uint32_t maxSize, bool with
       NS_LOG_LOGIC (" ECT bits should not be set on retransmitted packets ");
       if (m_tcb->m_ecnState != TcpSocketState::ECN_DISABLED && (GetIpTos () & 0x3) == 0 && !isRetransmission)
         { 
-          ipTosTag.SetTos (GetIpTos () | 0x2);
+          if (m_dualQueue)
+            {
+              //Classic traffic have ECT0 flags whereas L4S have ECT1 flags set
+              if(m_congestionControl->GetName () == "TcpDctcp")
+                {
+                  ipTosTag.SetTos (GetIpTos () | 0x1);
+                }
+              else
+                {
+                  ipTosTag.SetTos (GetIpTos () | 0x2);
+                }
+             }
+          else
+            {
+              ipTosTag.SetTos (GetIpTos () | 0x2);
+            }  
         }
       else
         {
@@ -2907,7 +2955,22 @@ TcpSocketBase::SendDataPacket (SequenceNumber32 seq, uint32_t maxSize, bool with
       if (m_tcb->m_ecnState != TcpSocketState::ECN_DISABLED && !isRetransmission)
         {
           SocketIpTosTag ipTosTag;
-          ipTosTag.SetTos (0x02);
+          if (m_dualQueue)
+            {
+              //Classic traffic have ECT0 flags whereas L4S have ECT1 flags set
+              if(m_congestionControl->GetName () == "TcpDctcp")
+                {
+                  ipTosTag.SetTos (0x1);
+                }
+              else
+                {
+                  ipTosTag.SetTos (0x2);
+                }
+            }
+          else
+            {
+              ipTosTag.SetTos (0x2);
+            }
           p->AddPacketTag (ipTosTag);
         }
     }
@@ -2917,7 +2980,22 @@ TcpSocketBase::SendDataPacket (SequenceNumber32 seq, uint32_t maxSize, bool with
       SocketIpv6TclassTag ipTclassTag;
       if (m_tcb->m_ecnState != TcpSocketState::ECN_DISABLED && (GetIpv6Tclass () & 0x3) == 0 && !isRetransmission)
         {
-          ipTclassTag.SetTclass (GetIpv6Tclass () | 0x2);
+          if (m_dualQueue)
+            {
+              //Classic traffic have ECT0 flags whereas L4S have ECT1 flags set
+              if(m_congestionControl->GetName () == "TcpDctcp")
+                {
+                  ipTclassTag.SetTclass (GetIpv6Tclass () | 0x1);
+                }
+              else
+                {
+                  ipTclassTag.SetTclass (GetIpv6Tclass () | 0x2);
+                }
+            }
+          else
+            {
+              ipTclassTag.SetTclass (GetIpv6Tclass () | 0x2);
+            }  
         }
       else
         {
@@ -2930,7 +3008,22 @@ TcpSocketBase::SendDataPacket (SequenceNumber32 seq, uint32_t maxSize, bool with
       if (m_tcb->m_ecnState != TcpSocketState::ECN_DISABLED && !isRetransmission)
         {
           SocketIpv6TclassTag ipTclassTag;
-          ipTclassTag.SetTclass (0x02);
+          if (m_dualQueue)
+            {
+              //Classic traffic have ECT0 flags whereas L4S have ECT1 flags set
+              if(m_congestionControl->GetName () == "TcpDctcp")
+                {
+                  ipTclassTag.SetTclass (0x1);
+                }
+              else
+                {
+                  ipTclassTag.SetTclass (0x2);
+                }
+            }
+          else
+            {
+              ipTclassTag.SetTclass (0x2);
+            }  
           p->AddPacketTag (ipTclassTag);
         }
     }
@@ -3609,11 +3702,41 @@ TcpSocketBase::PersistTimeout ()
   if (m_tcb->m_ecnState != TcpSocketState::ECN_DISABLED)
     {
       SocketIpTosTag ipTosTag;
-      ipTosTag.SetTos (0x02);
+      if (m_dualQueue)
+        {
+          //Classic traffic have ECT0 flags whereas L4S have ECT1 flags set
+          if(m_congestionControl->GetName () == "TcpDctcp")
+            {
+              ipTosTag.SetTos (0x1);
+            }
+          else
+            {
+              ipTosTag.SetTos (0x2);
+            }
+        }
+      else
+        {
+          ipTosTag.SetTos (0x2);
+        }  
       p->AddPacketTag (ipTosTag);
  
       SocketIpv6TclassTag ipTclassTag;
-      ipTclassTag.SetTclass (0x02);
+      if (m_dualQueue)
+        {
+          //Classic traffic have ECT0 flags whereas L4S have ECT1 flags set
+          if(m_congestionControl->GetName () == "TcpDctcp")
+            {
+              ipTclassTag.SetTclass (0x1);
+            }
+          else
+            {
+               ipTclassTag.SetTclass (0x2);
+            }
+        }
+      else
+        {
+          ipTclassTag.SetTclass (0x2);
+        }  
       p->AddPacketTag (ipTclassTag);
     }
   m_txTrace (p, tcpHeader, this);
@@ -4218,6 +4341,11 @@ TcpSocketBase::SetEcn()
   m_ecn = true;
 }
 
+void
+TcpSocketBase::SetDualQueue()
+{
+  m_dualQueue = true;
+}
 
 //RttHistory methods
 RttHistory::RttHistory (SequenceNumber32 s, uint32_t c, Time t)
