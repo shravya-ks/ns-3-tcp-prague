@@ -272,6 +272,7 @@ def build(bld):
         'test/tcp-bytes-in-flight-test.cc',
         'test/tcp-ecn-test.cc',
         'test/tcp-dctcp-test.cc',
+        'test/tcp-dual-queue-test.cc',
         'test/tcp-advertised-window-test.cc',
         'test/udp-test.cc',
         'test/ipv6-address-generator-test-suite.cc',
