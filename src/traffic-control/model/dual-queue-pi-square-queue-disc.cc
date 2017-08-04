@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2017 Trinity College Dublin
+ * Copyright (c) 2017 NITK Surathkal
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 as
@@ -15,7 +15,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * Authors: Rohit P. Tahiliani <rohit.tahil@gmail.com>
+ * Author: Shravya K.S. <shravya.ks0@gmail.com>
  *
  */
 
@@ -275,8 +275,7 @@ DualQueuePiSquareQueueDisc::DoEnqueue (Ptr<QueueDiscItem> item)
   Ptr<Packet> p = item->GetPacket ();
   DualQueuePiSquareTimestampTag tag;
   p->AddPacketTag (tag);
-  if ((GetMode () == QUEUE_DISC_MODE_PACKETS && GetQueueSize () > m_queueLimit)
-      || (GetMode () == QUEUE_DISC_MODE_BYTES && GetQueueSize () > m_queueLimit))
+  if (GetQueueSize () > m_queueLimit)
     {
       // Drops due to queue limit
       Drop (item);
@@ -312,10 +311,13 @@ DualQueuePiSquareQueueDisc::InitializeParams (void)
   m_minL4SLength = 2 * m_meanPktSize;
   m_dropProb = 0.0;
   m_qDelayOld = Time (Seconds (0));
+  m_classicQueueTime = Time::Min ();
+  m_l4sQueueTime = Time::Min ();
   m_stats.forcedDrop = 0;
-  m_stats.unforcedDrop = 0;
+  m_stats.unforcedClassicDrop = 0;
+  m_stats.unforcedClassicMark = 0;
+  m_stats.unforcedL4SMark = 0;
 }
-
 
 void DualQueuePiSquareQueueDisc::CalculateP ()
 {
@@ -336,14 +338,10 @@ Ptr<QueueDiscItem>
 DualQueuePiSquareQueueDisc::DoDequeue ()
 {
   NS_LOG_FUNCTION (this);
-
-  if (GetInternalQueue (0)->IsEmpty ())
-    {
-      NS_LOG_LOGIC ("Queue empty");
-      return 0;
-    }
-
-  if (m_l4sQueueTime.GetSeconds () + m_tShift.GetSeconds () >= m_classicQueueTime.GetSeconds ())
+  
+  while (GetQueueSize () > 0)
+  {
+    if (m_l4sQueueTime.GetSeconds () + m_tShift.GetSeconds () >= m_classicQueueTime.GetSeconds ())
     {
       Ptr<QueueDiscItem> item = GetInternalQueue (1)->Dequeue ();
       DualQueuePiSquareTimestampTag tag;
@@ -351,6 +349,7 @@ DualQueuePiSquareQueueDisc::DoDequeue ()
       if ((Simulator::Now () - tag.GetTxTime () > m_l4sThreshold && GetInternalQueue (1)->GetNBytes () > m_minL4SLength) || (m_l4sDropProb > m_uv->GetValue ()))
         {
           item->Mark ();
+          m_stats.unforcedL4SMark++;
         }
       return item;
     }
@@ -363,11 +362,17 @@ DualQueuePiSquareQueueDisc::DoDequeue ()
           if (!item->Mark ())
             {
               Drop (item);
-              //todo
+              m_stats.unforcedClassicDrop++;
+              continue;
             }
-          return item;
+          else
+            {
+             m_stats.unforcedClassicMark++;
+             return item;
+            }
         }
     }
+  }
   return 0;
 }
 

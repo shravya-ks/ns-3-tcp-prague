@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2017 Trinity College Dublin
+ * Copyright (c) 2017 NITK Surathkal
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 as
@@ -15,7 +15,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * Authors: Rohit P. Tahiliani <rohit.tahil@gmail.com>
+ * Author: Shravya K.S. <shravya.ks0@gmail.com>
  *
  */
 
@@ -69,9 +69,10 @@ public:
    */
   typedef struct
   {
-    uint32_t unforcedDrop;      //!< Early probability drops: proactive
-    uint32_t unforcedMark;      //!< Early probability marks: proactive
-    uint32_t forcedDrop;        //!< Drops due to queue limit: reactive
+    uint32_t unforcedClassicDrop;      //!< Early probability drops: proactive
+    uint32_t unforcedClassicMark;      //!< Early probability marks: proactive
+    uint32_t unforcedL4SMark;          //!< Early probability marks: proactive
+    uint32_t forcedDrop;               //!< Drops due to queue limit: reactive
   } Stats;
 
   /**
@@ -118,7 +119,7 @@ public:
   Time GetQueueDelay (void);
 
   /**
-   * \brief Get PI Square statistics after running.
+   * \brief Get Dual Queue PI Square statistics after running.
    *
    * \returns The drop statistics.
    */
@@ -133,13 +134,6 @@ public:
    * \return the number of stream indices assigned by this model
    */
   int64_t AssignStreams (int64_t stream);
-
-  /**
-   * \brief Set the value of m_useDualQ and enable ECN functionality of the router if useDualQ is true.
-   *
-   * \param useDualQ The value of UseDualQ.
-   */
-  void SetDualQ (bool useDualQ);
 
 protected:
   /**
@@ -167,30 +161,30 @@ private:
 
   // ** Variables supplied by user
   QueueDiscMode m_mode;                         //!< Mode (bytes or packets)
-  Time m_classicQueueDelayRef;                      //!< PI AQM Classic queue delay target
+  Time m_classicQueueDelayRef;                  //!< PI AQM Classic queue delay target
   Time m_sUpdate;                               //!< Start time of the update timer
   Time m_tUpdate;                               //!< Time period after which CalculateP () is called
   uint32_t m_meanPktSize;                       //!< Average packet size in bytes
-  double m_alpha;                                   //!< Parameter to PI Square controller
-  double m_beta;                                   //!< Parameter to PI Square controller
-  //bool m_useEcn;                                //!< True if ECN is used (packets are marked instead of being dropped)
+  double m_alpha;                               //!< Parameter to PI Square controller
+  double m_beta;                                //!< Parameter to PI Square controller
+  //bool m_useEcn;                              //!< True if ECN is used (packets are marked instead of being dropped)
   Time m_l4sThreshold;                          //!< L4S marking threshold in time
-  uint32_t m_k;                                  //!< Coupling factor
-  double m_maxLinkRate;                        //!< Maximum Link Rate
-  double m_maxClassicProb;                     //!< Max Classic drop/mark prob
+  uint32_t m_k;                                 //!< Coupling factor
+  double m_maxLinkRate;                         //!< Maximum Link Rate
+  double m_maxClassicProb;                      //!< Max Classic drop/mark prob
   uint32_t m_queueLimit;                        //!< Queue limit in bytes / packets
 
   // ** Variables maintained by PI Square
-  Time m_classicQueueTime;
-  Time m_l4sQueueTime;
-  double m_maxL4SProb;                           // Max L4S marking prob
-  Time m_tShift;                                 //!< Scheduler time bias
-  uint32_t m_minL4SLength;                       //!< Min L4S marking threshold in bytes
-  double m_dropProb;
+  Time m_classicQueueTime;                      //!< Arrival time of a packet of Classic Traffic
+  Time m_l4sQueueTime;                          //!< Arrival time of a packet of L4 Traffic
+  double m_maxL4SProb;                          // Max L4S marking prob
+  Time m_tShift;                                //!< Scheduler time bias
+  uint32_t m_minL4SLength;                      //!< Min L4S marking threshold in bytes
+  double m_dropProb;                            //!< Variable used in calculation of drop probability
   double m_classicDropProb;                     //!< Variable used in calculation of drop probability of Classic traffic
   double m_l4sDropProb;                         //!< Variable used in calculation of drop probability of L4S traffic
-  double m_alphaU;
-  double m_betaU;
+  double m_alphaU;                              //!< Parameter to PI Square controller
+  double m_betaU;                               //!< Parameter to PI Square controller
   Time m_qDelayOld;                             //!< Old value of queue delay
   Time m_qDelay;                                //!< Current value of queue delay
   EventId m_rtrsEvent;                          //!< Event used to decide the decision of interval of drop probability calculation
