@@ -235,7 +235,7 @@ DualQueuePiSquareQueueDisc::GetQueueSize (void)
     }
   else if (GetMode () == QUEUE_DISC_MODE_PACKETS)
     {
-      return (GetInternalQueue (0)->GetNPackets () + GetInternalQueue (0)->GetNPackets ());
+      return (GetInternalQueue (0)->GetNPackets () + GetInternalQueue (1)->GetNPackets ());
     }
   else
     {
@@ -338,15 +338,43 @@ Ptr<QueueDiscItem>
 DualQueuePiSquareQueueDisc::DoDequeue ()
 {
   NS_LOG_FUNCTION (this);
-  
+  Ptr<const QueueDiscItem> item1;
+  Ptr<const QueueDiscItem> item2;
   while (GetQueueSize () > 0)
   {
-    if (m_l4sQueueTime.GetSeconds () + m_tShift.GetSeconds () >= m_classicQueueTime.GetSeconds ())
+    if((item1 = GetInternalQueue (0)->Peek ()) != 0)
+      {
+         DualQueuePiSquareTimestampTag tag1;
+         item1->GetPacket ()->RemovePacketTag (tag1);
+         m_classicQueueTime = tag1.GetTxTime ();
+      }
+    else
+          m_classicQueueTime = Time (Seconds(0));
+
+    if((item2 = GetInternalQueue (1)->Peek ()) != 0)
+      {
+         DualQueuePiSquareTimestampTag tag2;
+         item2->GetPacket ()->RemovePacketTag (tag2);
+         m_l4sQueueTime = tag2.GetTxTime ();
+      }
+    else
+          m_l4sQueueTime = Time (Seconds(0));
+         
+    if (m_l4sQueueTime.GetSeconds () + m_tShift.GetSeconds () >= m_classicQueueTime.GetSeconds () && GetInternalQueue (1)->Peek () != 0 )
     {
       Ptr<QueueDiscItem> item = GetInternalQueue (1)->Dequeue ();
       DualQueuePiSquareTimestampTag tag;
       item->GetPacket ()->RemovePacketTag (tag);
-      if ((Simulator::Now () - tag.GetTxTime () > m_l4sThreshold && GetInternalQueue (1)->GetNBytes () > m_minL4SLength) || (m_l4sDropProb > m_uv->GetValue ()))
+      bool minL4SQueueSizeFlag = false;
+      if (GetMode () == QUEUE_DISC_MODE_BYTES && GetInternalQueue (1)->GetNBytes () > 2 * m_meanPktSize)
+        {
+          minL4SQueueSizeFlag = true;
+        }
+     else if (GetMode () == QUEUE_DISC_MODE_PACKETS && GetInternalQueue (1)->GetNPackets () > 2 )
+        {
+          minL4SQueueSizeFlag = true;
+        }
+      if ((Simulator::Now () - tag.GetTxTime () > m_l4sThreshold && minL4SQueueSizeFlag) || (m_l4sDropProb > m_uv->GetValue ()))
         {
           item->Mark ();
           m_stats.unforcedL4SMark++;
