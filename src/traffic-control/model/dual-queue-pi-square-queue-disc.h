@@ -118,6 +118,8 @@ public:
    */
   Time GetQueueDelay (void);
 
+  double GetDropProb (void);
+
   /**
    * \brief Get Dual Queue PI Square statistics after running.
    *
