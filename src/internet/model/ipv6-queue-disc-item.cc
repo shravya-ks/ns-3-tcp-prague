@@ -93,7 +93,7 @@ Ipv6QueueDiscItem::Mark (void)
 }
 
 bool
-Ipv6QueueDiscItem::IsScalable (void)
+Ipv6QueueDiscItem::IsL4S (void)
 {
   NS_LOG_FUNCTION (this);
   if (!m_headerAdded && m_header.GetEcn () == Ipv6Header::ECN_ECT1)

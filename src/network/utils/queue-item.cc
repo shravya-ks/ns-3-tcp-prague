@@ -126,7 +126,7 @@ QueueDiscItem::Print (std::ostream& os) const
 }
 
 bool
-QueueDiscItem::IsScalable (void)
+QueueDiscItem::IsL4S (void)
 {
   return false;
 }

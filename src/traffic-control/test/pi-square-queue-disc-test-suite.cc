@@ -37,7 +37,7 @@ public:
   virtual ~PiSquareQueueDiscTestItem ();
   virtual void AddHeader (void);
   virtual bool Mark(void);
-  virtual bool IsScalable(void);
+  virtual bool IsL4S(void);
 
 private:
   PiSquareQueueDiscTestItem ();
@@ -66,48 +66,48 @@ PiSquareQueueDiscTestItem::Mark (void)
 }
 
 bool
-PiSquareQueueDiscTestItem::IsScalable (void)
+PiSquareQueueDiscTestItem::IsL4S (void)
 {
   return false;
 }
 
-class ScalableQueueDiscTestItem : public QueueDiscItem
+class L4SQueueDiscTestItem : public QueueDiscItem
 {
 public:
-  ScalableQueueDiscTestItem (Ptr<Packet> p, const Address & addr, uint16_t protocol);
-  virtual ~ScalableQueueDiscTestItem ();
+  L4SQueueDiscTestItem (Ptr<Packet> p, const Address & addr, uint16_t protocol);
+  virtual ~L4SQueueDiscTestItem ();
   virtual void AddHeader (void);
   virtual bool Mark(void);
-  virtual bool IsScalable (void);
+  virtual bool IsL4S (void);
 
 private:
-  ScalableQueueDiscTestItem ();
-  ScalableQueueDiscTestItem (const ScalableQueueDiscTestItem &);
-  ScalableQueueDiscTestItem &operator = (const ScalableQueueDiscTestItem &);
+  L4SQueueDiscTestItem ();
+  L4SQueueDiscTestItem (const L4SQueueDiscTestItem &);
+  L4SQueueDiscTestItem &operator = (const L4SQueueDiscTestItem &);
 };
 
-ScalableQueueDiscTestItem::ScalableQueueDiscTestItem (Ptr<Packet> p, const Address & addr, uint16_t protocol)
+L4SQueueDiscTestItem::L4SQueueDiscTestItem (Ptr<Packet> p, const Address & addr, uint16_t protocol)
   : QueueDiscItem (p, addr, protocol)
 {
 }
 
-ScalableQueueDiscTestItem::~ScalableQueueDiscTestItem ()
+L4SQueueDiscTestItem::~L4SQueueDiscTestItem ()
 {
 }
 
 void
-ScalableQueueDiscTestItem::AddHeader (void)
+L4SQueueDiscTestItem::AddHeader (void)
 {
 }
 
 bool
-ScalableQueueDiscTestItem::Mark (void)
+L4SQueueDiscTestItem::Mark (void)
 {
   return true;
 }
 
 bool 
-ScalableQueueDiscTestItem::IsScalable (void)
+L4SQueueDiscTestItem::IsL4S (void)
 {
   return true;
 }
@@ -119,7 +119,7 @@ public:
   virtual ~ClassicQueueDiscTestItem ();
   virtual void AddHeader (void);
   virtual bool Mark(void);
-  virtual bool IsScalable (void);
+  virtual bool IsL4S (void);
 
 private:
   ClassicQueueDiscTestItem ();
@@ -148,7 +148,7 @@ ClassicQueueDiscTestItem::Mark (void)
 }
 
 bool 
-ClassicQueueDiscTestItem::IsScalable (void)
+ClassicQueueDiscTestItem::IsL4S (void)
 {
   return false;
 }
@@ -388,7 +388,7 @@ PiSquareQueueDiscTestCase::RunPiSquareTest (StringValue mode)
                          "Verify that the attribute UseEcn of queue2 is getting set to true when UseDualQ is true");
   queue1->Initialize ();
   queue2->Initialize ();
-  EnqueueWithDelay (queue1, pktSize, 400, StringValue("Scalable"));
+  EnqueueWithDelay (queue1, pktSize, 400, StringValue("L4S"));
   EnqueueWithDelay (queue2, pktSize, 400, StringValue("Classic"));
   DequeueWithDelay (queue1, 0.015, 400); 
   DequeueWithDelay (queue2, 0.015, 400);
@@ -398,8 +398,8 @@ PiSquareQueueDiscTestCase::RunPiSquareTest (StringValue mode)
   PiSquareQueueDisc::Stats st2 = StaticCast<PiSquareQueueDisc> (queue2)->GetStats ();
   uint32_t mark1 = st1.unforcedMark;
   uint32_t mark2 = st2.unforcedMark;
-  NS_TEST_EXPECT_MSG_GT (mark1, mark2, "Packets of Scalable traffic should have more unforced marks than packets of Classic traffic");  
-  NS_TEST_EXPECT_MSG_EQ (st1.unforcedDrop, 0, "There should be zero unforced drops for packets of Scalable traffic");
+  NS_TEST_EXPECT_MSG_GT (mark1, mark2, "Packets of L4S traffic should have more unforced marks than packets of Classic traffic");  
+  NS_TEST_EXPECT_MSG_EQ (st1.unforcedDrop, 0, "There should be zero unforced drops for packets of L4S traffic");
   NS_TEST_EXPECT_MSG_EQ (st2.unforcedDrop, 0, "There should be zero unforced drops for packets of Classic traffic when its ECN capable");
 
 }
@@ -410,11 +410,9 @@ PiSquareQueueDiscTestCase::Enqueue (Ptr<PiSquareQueueDisc> queue, uint32_t size,
   Address dest;
   for (uint32_t i = 0; i < nPkt; i++)
     {
-      //NS_TEST_EXPECT_MSG_EQ (trafficType.Get(), "Scalable", "Works");
-      if (trafficType.Get() == "Scalable")
+      if (trafficType.Get() == "L4S")
         {
-          NS_TEST_EXPECT_MSG_EQ (trafficType.Get(), "Scalable", "Works");
-          queue->Enqueue (Create<ScalableQueueDiscTestItem> (Create<Packet> (size), dest, 0));
+          queue->Enqueue (Create<L4SQueueDiscTestItem> (Create<Packet> (size), dest, 0));
         }
       else if (trafficType.Get() == "Classic")
         {

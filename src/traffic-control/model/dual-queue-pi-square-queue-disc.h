@@ -69,9 +69,9 @@ public:
    */
   typedef struct
   {
-    uint32_t unforcedClassicDrop;      //!< Early probability drops: proactive
-    uint32_t unforcedClassicMark;      //!< Early probability marks: proactive
-    uint32_t unforcedL4SMark;          //!< Early probability marks: proactive
+    uint32_t unforcedClassicDrop;      //!< Early classic probability drops: proactive
+    uint32_t unforcedClassicMark;      //!< Early classic probability marks: proactive
+    uint32_t unforcedL4SMark;          //!< Early l4s probability marks: proactive
     uint32_t forcedDrop;               //!< Drops due to queue limit: reactive
   } Stats;
 
@@ -169,17 +169,13 @@ private:
   uint32_t m_meanPktSize;                       //!< Average packet size in bytes
   double m_alpha;                               //!< Parameter to PI Square controller
   double m_beta;                                //!< Parameter to PI Square controller
-  //bool m_useEcn;                              //!< True if ECN is used (packets are marked instead of being dropped)
   Time m_l4sThreshold;                          //!< L4S marking threshold in time
   uint32_t m_k;                                 //!< Coupling factor
-  double m_maxLinkRate;                         //!< Maximum Link Rate
-  double m_maxClassicProb;                      //!< Max Classic drop/mark prob
   uint32_t m_queueLimit;                        //!< Queue limit in bytes / packets
 
   // ** Variables maintained by PI Square
   Time m_classicQueueTime;                      //!< Arrival time of a packet of Classic Traffic
   Time m_l4sQueueTime;                          //!< Arrival time of a packet of L4 Traffic
-  double m_maxL4SProb;                          // Max L4S marking prob
   Time m_tShift;                                //!< Scheduler time bias
   uint32_t m_minL4SLength;                      //!< Min L4S marking threshold in bytes
   double m_dropProb;                            //!< Variable used in calculation of drop probability

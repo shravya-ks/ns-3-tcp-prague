@@ -188,6 +188,13 @@ PiSquareQueueDisc::GetQueueDelay (void)
   return m_qDelay;
 }
 
+double
+PiSquareQueueDisc::GetDropProb (void)
+{
+  NS_LOG_FUNCTION (this);
+  return m_dropProb;
+}
+
 int64_t
 PiSquareQueueDisc::AssignStreams (int64_t stream)
 {
@@ -273,9 +280,9 @@ bool PiSquareQueueDisc::DropEarly (Ptr<QueueDiscItem> item, uint32_t qSize)
       return false;
     }
 
-  if (m_useDualQ && item->IsScalable ())
+  if (m_useDualQ && item->IsL4S ())
     {
-       //Apply linear probability for scalable traffic
+       //Apply linear probability for L4S traffic
        if (u > p)
          {
            earlyDrop = false;

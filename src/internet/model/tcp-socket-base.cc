@@ -2508,7 +2508,7 @@ TcpSocketBase::SendEmptyPacket (uint8_t flags)
           ipTosTag.SetTos (GetIpTos () | 0x1);
         }
       else
-        {
+        { 
           ipTosTag.SetTos (GetIpTos ());
         }
       p->AddPacketTag (ipTosTag);
@@ -3643,11 +3643,11 @@ TcpSocketBase::PersistTimeout ()
       SocketIpTosTag ipTosTag;
       //Classic traffic have ECT0 flags whereas L4S have ECT1 flags set
       if (m_congestionControl->GetName () == "TcpDctcp")
-        {
+        {  
           ipTosTag.SetTos (0x1);
         }
       else
-        {
+        {  
           ipTosTag.SetTos (0x2);
         }
       p->AddPacketTag (ipTosTag);
@@ -4239,6 +4239,7 @@ void
 TcpSocketBase::SetCongestionControlAlgorithm (Ptr<TcpCongestionOps> algo)
 {
   NS_LOG_FUNCTION (this << algo);
+  NS_LOG_DEBUG ("Congestion control algo is" << algo);
   m_congestionControl = algo;
   m_congestionControl->SetSocketBase(this);
 }

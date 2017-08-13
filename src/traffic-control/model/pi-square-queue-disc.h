@@ -114,6 +114,8 @@ public:
    */
   Time GetQueueDelay (void);
 
+  double GetDropProb (void);
+
   /**
    * \brief Get PI Square statistics after running.
    *

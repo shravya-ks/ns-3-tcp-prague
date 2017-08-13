@@ -203,11 +203,11 @@ public:
   virtual bool Mark (void) = 0;
 
   /**
-   * \brief Checks if the packet is of Scalable traffic when DualQ AQM Framework is used
+   * \brief Checks if the packet is of L4S traffic when DualQ AQM Framework is used
    *
-   * \return true if the packet is of Scalable traffic, false otherwise
+   * \return true if the packet is of L4S traffic, false otherwise
    */
-  virtual bool IsScalable (void);
+  virtual bool IsL4S (void);
 
 private:
   /**

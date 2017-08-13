@@ -94,7 +94,7 @@ Ipv4QueueDiscItem::Mark (void)
 
 
 bool
-Ipv4QueueDiscItem::IsScalable (void)
+Ipv4QueueDiscItem::IsL4S (void)
 {
   NS_LOG_FUNCTION (this);
   if (!m_headerAdded && m_header.GetEcn () == Ipv4Header::ECN_ECT1)

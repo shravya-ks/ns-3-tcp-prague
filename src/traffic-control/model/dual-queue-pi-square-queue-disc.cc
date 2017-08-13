@@ -57,6 +57,7 @@ public:
    * @return the time object stored in the tag
    */
   Time GetTxTime (void) const;
+
 private:
   uint64_t m_creationTime; //!< Tag creation time
 };
@@ -172,11 +173,6 @@ TypeId DualQueuePiSquareQueueDisc::GetTypeId (void)
                    UintegerValue (2),
                    MakeUintegerAccessor (&DualQueuePiSquareQueueDisc::m_k),
                    MakeUintegerChecker<uint32_t> ())
-    .AddAttribute ("MaxClassicProb",
-                   "Maximum Classic drop/mark probability",
-                   DoubleValue (0.25),
-                   MakeDoubleAccessor (&DualQueuePiSquareQueueDisc::m_maxClassicProb),
-                   MakeDoubleChecker<double> ())
   ;
 
   return tid;
@@ -282,7 +278,7 @@ DualQueuePiSquareQueueDisc::DoEnqueue (Ptr<QueueDiscItem> item)
   Ptr<Packet> p = item->GetPacket ();
   DualQueuePiSquareTimestampTag tag;
   p->AddPacketTag (tag);
-  
+
   uint32_t nQueued = GetQueueSize ();
   if ((GetMode () == QUEUE_DISC_MODE_PACKETS && nQueued >= m_queueLimit)
       || (GetMode () == QUEUE_DISC_MODE_BYTES && nQueued + item->GetSize () > m_queueLimit))
@@ -294,15 +290,13 @@ DualQueuePiSquareQueueDisc::DoEnqueue (Ptr<QueueDiscItem> item)
     }
   else
     {
-      if (item->IsScalable ())
+      if (item->IsL4S ())
         {
           queueNumber = 1;
-          NS_LOG_DEBUG ("Enqueued in Scalable");
         }
       else
         {
           queueNumber = 0;
-          NS_LOG_DEBUG ("Enqueued in Classic");
         }
     }
 
@@ -317,7 +311,6 @@ DualQueuePiSquareQueueDisc::InitializeParams (void)
   m_tShift = 2 * m_classicQueueDelayRef;
   m_alphaU = m_alpha * m_tUpdate.GetSeconds ();
   m_betaU = m_beta * m_tUpdate.GetSeconds ();
-  m_maxL4SProb  = min (m_k * sqrt (m_maxClassicProb), 1);
   m_minL4SLength = 2 * m_meanPktSize;
   m_dropProb = 0.0;
   m_qDelayOld = Time (Seconds (0));
@@ -335,75 +328,43 @@ void DualQueuePiSquareQueueDisc::CalculateP ()
   Time qDelay;
   bool updateProb = true;
 
-  if((item = GetInternalQueue (0)->Peek ()) != 0)
-      {
-         DualQueuePiSquareTimestampTag tag;
-         item->GetPacket ()->RemovePacketTag (tag);
-         qDelay = Simulator::Now () - tag.GetTxTime ();
-         NS_LOG_DEBUG ("Now" << Simulator::Now ().GetSeconds() );
-         NS_LOG_DEBUG ("Tag Time" << tag.GetTxTime ().GetSeconds());     
-      }
-  else
-   {
-     qDelay = Time (Seconds (0));
-   }
-   
-   /* If qdelay is zero and qlen is not, it means qlen is very small, less
-      than dequeue_rate, so we do not update probabilty in this round*/
-
-   if (qDelay == 0 && GetQueueSize() > 0)
+  if ((item = GetInternalQueue (0)->Peek ()) != 0)
     {
-      NS_LOG_DEBUG ("Returned becuase queue not empty");
+      DualQueuePiSquareTimestampTag tag;
+      item->GetPacket ()->PeekPacketTag (tag);
+      qDelay = Simulator::Now () - tag.GetTxTime ();
+    }
+  else
+    {
+      qDelay = Time (Seconds (0));
+    }
+
+  //If qdelay is zero and qlen is not, it means qlen is very small, less than dequeue_rate, so we do not update probabilty in this round
+
+  if (qDelay == 0 && GetQueueSize () > 0)
+    {
+      m_rtrsEvent = Simulator::Schedule (m_tUpdate, &DualQueuePiSquareQueueDisc::CalculateP, this);
       return;
     }
   double delta = m_alphaU * (qDelay.GetSeconds () - m_classicQueueDelayRef.GetSeconds ()) +
     m_betaU * (qDelay.GetSeconds () - m_qDelayOld.GetSeconds ());
 
-  //double oldProb = m_dropProb;
   m_dropProb += delta;
- 
-  // p += m_dropProb;
-  
-  /*if (delta > 0)
-  {
-     //prevent overflow
- 
-     if (m_dropProb < oldProb)
-     {
-       m_dropProb = MAX_PROB;
-      // Prevent normalization error. If probability is at
-			 * maximum value already, we normalize it here, and
-			 * skip the check to do a non-linear drop in the next
-			 * section.
-			
-       updateProb = false;
-     }
- }
-    else
-     {
-       //prevent underflow
-       if (m_dropProb > oldProb) 
-          m_dropProb = 0;
 
-    }*/
-
-  /* Non-linear drop in probability: Reduce drop probability quickly if
-	 * delay is 0 for 2 consecutive Tupdate periods.
-	 */
+  //Non-linear drop in probability: Reduce drop probability quickly if delay is 0 for 2 consecutive Tupdate periods
 
   if ((qDelay == 0) && (m_qDelayOld == 0) && updateProb)
-		m_dropProb = (m_dropProb * 0.98);
-   
+    {
+      m_dropProb = (m_dropProb * 0.98);
+    }
 
-  if(m_dropProb < 0)
-   m_dropProb =0;
- 
-  if(m_dropProb > 1)
-    m_dropProb =1;
+
+  m_dropProb = (m_dropProb > 0) ? m_dropProb : 0;
+  m_dropProb = (m_dropProb < 1) ? m_dropProb : 1;
+
   m_l4sDropProb = m_dropProb * m_k;
   m_classicDropProb = m_dropProb * m_dropProb;
   m_qDelayOld = qDelay;
-  //m_dropProb = (p > 0) ? p : 0;
   m_rtrsEvent = Simulator::Schedule (m_tUpdate, &DualQueuePiSquareQueueDisc::CalculateP, this);
 }
 
@@ -415,82 +376,81 @@ DualQueuePiSquareQueueDisc::DoDequeue ()
   Ptr<const QueueDiscItem> item2;
   Time classicQueueTime;
   Time l4sQueueTime;
+  DualQueuePiSquareTimestampTag tag1;
+  DualQueuePiSquareTimestampTag tag2;
 
   while (GetQueueSize () > 0)
-  {
-    if((item1 = GetInternalQueue (0)->Peek ()) != 0)
-      {
-         DualQueuePiSquareTimestampTag tag1;
-         item1->GetPacket ()->RemovePacketTag (tag1);
-         classicQueueTime = tag1.GetTxTime ();
-      }
-    else
-         classicQueueTime = Time (Seconds(0));
-
-    if((item2 = GetInternalQueue (1)->Peek ()) != 0)
-      {
-         DualQueuePiSquareTimestampTag tag2;
-         item2->GetPacket ()->RemovePacketTag (tag2);
-         l4sQueueTime = tag2.GetTxTime ();
-      }
-    else
-          l4sQueueTime = Time (Seconds(0));
-         
-    if (l4sQueueTime.GetSeconds () + m_tShift.GetSeconds () >= classicQueueTime.GetSeconds () && GetInternalQueue (1)->Peek () != 0 )
     {
-      Ptr<QueueDiscItem> item = GetInternalQueue (1)->Dequeue ();
-      DualQueuePiSquareTimestampTag tag;
-      item->GetPacket ()->RemovePacketTag (tag);
-      bool minL4SQueueSizeFlag = false;
-      if (GetMode () == QUEUE_DISC_MODE_BYTES && GetInternalQueue (1)->GetNBytes () > 2 * m_meanPktSize)
+      if ((item1 = GetInternalQueue (0)->Peek ()) != 0)
         {
-          minL4SQueueSizeFlag = true;
+          item1->GetPacket ()->PeekPacketTag (tag1);
+          classicQueueTime = tag1.GetTxTime ();
         }
-     else if (GetMode () == QUEUE_DISC_MODE_PACKETS && GetInternalQueue (1)->GetNPackets () > 2 )
+      else
         {
-          minL4SQueueSizeFlag = true;
+          classicQueueTime = Time (Seconds (0));
         }
-       
-      if ((Simulator::Now () - tag.GetTxTime () > m_l4sThreshold && minL4SQueueSizeFlag) || (m_l4sDropProb > m_uv->GetValue ()))
-        {
-          item->Mark ();
-          m_stats.unforcedL4SMark++;
-        }
-      return item;
-    }
 
-  else
-    {
-      NS_LOG_DEBUG ("here1");
-      NS_LOG_DEBUG ("Classic Drop Prob ="<<m_classicDropProb);
-      NS_LOG_DEBUG ("Random Prob value ="<<m_uv->GetValue()/10);
-      Ptr<QueueDiscItem> item = GetInternalQueue (0)->Dequeue ();
-      if (m_classicDropProb / (m_k * 1.0) >  m_uv->GetValue ())
+      if ((item2 = GetInternalQueue (1)->Peek ()) != 0)
         {
-          if (!item->Mark ())
-            {
-              Drop (item);
-              NS_LOG_DEBUG ("here");
-              m_stats.unforcedClassicDrop++;
-              continue;
-            }
-          else
-            {
-             NS_LOG_DEBUG ("here2");
-             m_stats.unforcedClassicMark++;
-             return item;
-            }
+          item2->GetPacket ()->PeekPacketTag (tag2);
+          l4sQueueTime = tag2.GetTxTime ();
         }
-      return item;
+      else
+        {
+          l4sQueueTime = Time (Seconds (0));
+        }
+
+      if (l4sQueueTime.GetSeconds () + m_tShift.GetSeconds () >= classicQueueTime.GetSeconds () && GetInternalQueue (1)->Peek () != 0 )
+        {
+          Ptr<QueueDiscItem> item = GetInternalQueue (1)->Dequeue ();
+          DualQueuePiSquareTimestampTag tag;
+          item->GetPacket ()->PeekPacketTag (tag);
+          bool minL4SQueueSizeFlag = false;
+          if (GetMode () == QUEUE_DISC_MODE_BYTES && GetInternalQueue (1)->GetNBytes () > 2 * m_meanPktSize)
+            {
+              minL4SQueueSizeFlag = true;
+            }
+          else if (GetMode () == QUEUE_DISC_MODE_PACKETS && GetInternalQueue (1)->GetNPackets () > 2 )
+            {
+              minL4SQueueSizeFlag = true;
+            }
+
+          if ((Simulator::Now () - tag.GetTxTime () > m_l4sThreshold && minL4SQueueSizeFlag) || (m_l4sDropProb > m_uv->GetValue ()))
+            {
+              item->Mark ();
+              m_stats.unforcedL4SMark++;
+            }
+          return item;
+        }
+
+      else
+        {
+          Ptr<QueueDiscItem> item = GetInternalQueue (0)->Dequeue ();
+          if (m_classicDropProb / (m_k * 1.0) >  m_uv->GetValue ())
+            {
+              if (!item->Mark ())
+                {
+                  Drop (item);
+                  m_stats.unforcedClassicDrop++;
+                  continue;
+                }
+              else
+                {
+                  m_stats.unforcedClassicMark++;
+                  return item;
+                }
+            }
+          return item;
+        }
     }
-  }
   return 0;
 }
 
 Ptr<const QueueDiscItem>
 DualQueuePiSquareQueueDisc::DoPeek () const
 {
-  NS_LOG_FUNCTION (this);
+  //NS_LOG_FUNCTION (this);
   Ptr<const QueueDiscItem> item;
 
   for (uint32_t i = 0; i < GetNInternalQueues (); i++)
@@ -504,14 +464,14 @@ DualQueuePiSquareQueueDisc::DoPeek () const
         }
     }
 
-  NS_LOG_LOGIC ("Queue empty");
+  //NS_LOG_LOGIC ("Queue empty");
   return item;
 }
 
 bool
 DualQueuePiSquareQueueDisc::CheckConfig (void)
 {
-  NS_LOG_FUNCTION (this);
+  //NS_LOG_FUNCTION (this);
   if (GetNQueueDiscClasses () > 0)
     {
       NS_LOG_ERROR ("DualQueuePiSquareQueueDisc cannot have classes");
