@@ -160,7 +160,7 @@ TypeId DualQueuePiSquareQueueDisc::GetTypeId (void)
                    MakeUintegerChecker<uint32_t> ())
     .AddAttribute ("ClassicQueueDelayReference",
                    "Desired queue delay of Classic traffic",
-                   TimeValue (Seconds (0.15)),
+                   TimeValue (Seconds (0.015)),
                    MakeTimeAccessor (&DualQueuePiSquareQueueDisc::m_classicQueueDelayRef),
                    MakeTimeChecker ())
     .AddAttribute ("L4SMarkThresold",
