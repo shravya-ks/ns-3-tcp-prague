@@ -226,8 +226,6 @@ DualQueuePiSquareQueueDiscTestCase::RunPiSquareTest (StringValue mode)
                          "Verify that we can actually set the attribute L4SMarkThresold");
   NS_TEST_EXPECT_MSG_EQ (queue->SetAttributeFailSafe ("K", UintegerValue (2)), true,
                          "Verify that we can actually set the attribute K"); 
-  NS_TEST_EXPECT_MSG_EQ (queue->SetAttributeFailSafe ("MaxClassicProb", DoubleValue (0.25)), true,
-                         "Verify that we can actually set the attribute MaxClassicProb");
   NS_TEST_EXPECT_MSG_EQ (queue->SetAttributeFailSafe ("ClassicQueueDelayReference", TimeValue (Seconds (0.15))), true,
                          "Verify that we can actually set the attribute QueueDelayReference");
   queue->Initialize ();
@@ -264,8 +262,6 @@ DualQueuePiSquareQueueDiscTestCase::RunPiSquareTest (StringValue mode)
                          "Verify that we can actually set the attribute L4SMarkThresold");
   NS_TEST_EXPECT_MSG_EQ (queue->SetAttributeFailSafe ("K", UintegerValue (2)), true,
                          "Verify that we can actually set the attribute K"); 
-  NS_TEST_EXPECT_MSG_EQ (queue->SetAttributeFailSafe ("MaxClassicProb", DoubleValue (0.25)), true,
-                         "Verify that we can actually set the attribute MaxClassicProb");
   NS_TEST_EXPECT_MSG_EQ (queue->SetAttributeFailSafe ("ClassicQueueDelayReference", TimeValue (Seconds (0.15))), true,
                          "Verify that we can actually set the attribute QueueDelayReference");
   queue->Initialize ();
@@ -296,8 +292,6 @@ DualQueuePiSquareQueueDiscTestCase::RunPiSquareTest (StringValue mode)
                          "Verify that we can actually set the attribute L4SMarkThresold");
   NS_TEST_EXPECT_MSG_EQ (queue->SetAttributeFailSafe ("K", UintegerValue (2)), true,
                          "Verify that we can actually set the attribute K"); 
-  NS_TEST_EXPECT_MSG_EQ (queue->SetAttributeFailSafe ("MaxClassicProb", DoubleValue (0.25)), true,
-                         "Verify that we can actually set the attribute MaxClassicProb");
   NS_TEST_EXPECT_MSG_EQ (queue->SetAttributeFailSafe ("ClassicQueueDelayReference", TimeValue (Seconds (0.15))), true,
                          "Verify that we can actually set the attribute QueueDelayReference");
   queue->Initialize ();

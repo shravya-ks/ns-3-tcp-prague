@@ -87,22 +87,22 @@ TcpDctcpCodePointsTest::Tx (const Ptr<const Packet> p, const TcpHeader &h, Socke
         {
           if (m_senderSent == 1)
             {
-              NS_TEST_ASSERT_MSG_EQ ((ipTosTag.GetTos ()), 0x2, "IP TOS should have ECT for SYN packet for DCTCP traffic");
+              NS_TEST_ASSERT_MSG_EQ ((ipTosTag.GetTos ()), 0x1, "IP TOS should have ECT1 for SYN packet for DCTCP traffic");
             }
           if (m_senderSent == 3)
             {
-              NS_TEST_ASSERT_MSG_EQ ((ipTosTag.GetTos ()), 0x2, "IP TOS should have ECT for data packets for DCTCP traffic");
+              NS_TEST_ASSERT_MSG_EQ ((ipTosTag.GetTos ()), 0x1, "IP TOS should have ECT1 for data packets for DCTCP traffic");
             }
         }
       else
         {
           if (m_senderSent == 1)
             {
-              NS_TEST_ASSERT_MSG_NE ((ipTosTag.GetTos ()), 0x2, "IP TOS should not have ECT for SYN packet for DCTCP traffic");
+              NS_TEST_ASSERT_MSG_NE ((ipTosTag.GetTos ()), 0x1, "IP TOS should not have ECT1 for SYN packet for DCTCP traffic");
             }
           if (m_senderSent == 3)
             {
-              NS_TEST_ASSERT_MSG_EQ ((ipTosTag.GetTos ()), 0x2, "IP TOS should have ECT for data packets for non-DCTCP but ECN enabled traffic");
+              NS_TEST_ASSERT_MSG_EQ ((ipTosTag.GetTos ()), 0x2, "IP TOS should have ECT0 for data packets for non-DCTCP but ECN enabled traffic");
             }
         }
     }
@@ -115,22 +115,22 @@ TcpDctcpCodePointsTest::Tx (const Ptr<const Packet> p, const TcpHeader &h, Socke
         {
           if (m_receiverSent == 1)
             {
-              NS_TEST_ASSERT_MSG_EQ ((ipTosTag.GetTos ()), 0x2, "IP TOS should have ECT for SYN+ACK packet for DCTCP traffic");
+              NS_TEST_ASSERT_MSG_EQ ((ipTosTag.GetTos ()), 0x1, "IP TOS should have ECT1 for SYN+ACK packet for DCTCP traffic");
             }
           if (m_receiverSent == 2)
             {
-              NS_TEST_ASSERT_MSG_EQ ((ipTosTag.GetTos ()), 0x2, "IP TOS should have ECT for pure ACK packets for DCTCP traffic");
+              NS_TEST_ASSERT_MSG_EQ ((ipTosTag.GetTos ()), 0x1, "IP TOS should have ECT1 for pure ACK packets for DCTCP traffic");
             }
         }
       else
         {
           if (m_receiverSent == 1)
             {
-              NS_TEST_ASSERT_MSG_NE ((ipTosTag.GetTos ()), 0x2, "IP TOS should not have ECT for SYN+ACK packet for non-DCTCP traffic");
+              NS_TEST_ASSERT_MSG_NE ((ipTosTag.GetTos ()), 0x2, "IP TOS should not have ECT0 for SYN+ACK packet for non-DCTCP traffic");
             }
           if (m_receiverSent == 2)
             {
-              NS_TEST_ASSERT_MSG_NE ((ipTosTag.GetTos ()), 0x2, "IP TOS should not have ECT for pure ACK packets for non-DCTCP traffic");
+              NS_TEST_ASSERT_MSG_NE ((ipTosTag.GetTos ()), 0x2, "IP TOS should not have ECT0 for pure ACK packets for non-DCTCP traffic");
             }
         }
     }
@@ -258,8 +258,8 @@ TcpDctcpCongestedRouter::SendDataPacket (SequenceNumber32 seq, uint32_t maxSize,
   if (m_tcb->m_ecnState == TcpSocketState::ECN_ECE_RCVD && m_ecnEchoSeq.Get () > m_ecnCWRSeq.Get () && !isRetransmission && m_testCase != 3)
     {
       NS_LOG_INFO ("Backoff mechanism by reducing CWND  by half because we've received ECN Echo");
-      m_tcb->m_ssThresh = m_congestionControl->GetSsThresh (m_tcb, BytesInFlight ());
       m_congestionControl->ReduceCwnd (m_tcb);
+      m_tcb->m_ssThresh = m_tcb->m_cWnd;
       flags |= TcpHeader::CWR;
       m_ecnCWRSeq = seq;
       m_tcb->m_ecnState = TcpSocketState::ECN_CWR_SENT;
@@ -291,7 +291,7 @@ TcpDctcpCongestedRouter::SendDataPacket (SequenceNumber32 seq, uint32_t maxSize,
         {
           if (m_tcb->m_ecnState != TcpSocketState::ECN_DISABLED && (GetIpTos () & 0x3) == 0 && !isRetransmission)
             {
-              ipTosTag.SetTos (GetIpTos () | 0x2);
+              ipTosTag.SetTos (GetIpTos () | 0x1);
             }
           else
             {
@@ -311,7 +311,7 @@ TcpDctcpCongestedRouter::SendDataPacket (SequenceNumber32 seq, uint32_t maxSize,
         {
           if (m_tcb->m_ecnState != TcpSocketState::ECN_DISABLED && !isRetransmission)
             {
-              ipTosTag.SetTos (0x2);
+              ipTosTag.SetTos (0x1);
             }
         }
       p->AddPacketTag (ipTosTag);
@@ -328,7 +328,7 @@ TcpDctcpCongestedRouter::SendDataPacket (SequenceNumber32 seq, uint32_t maxSize,
         {
           if (m_tcb->m_ecnState != TcpSocketState::ECN_DISABLED && (GetIpv6Tclass () & 0x3) == 0 && !isRetransmission)
             {
-              ipTclassTag.SetTclass (GetIpv6Tclass () | 0x2);
+              ipTclassTag.SetTclass (GetIpv6Tclass () | 0x1);
             }
           else
             {
@@ -348,7 +348,7 @@ TcpDctcpCongestedRouter::SendDataPacket (SequenceNumber32 seq, uint32_t maxSize,
         {
           if (m_tcb->m_ecnState != TcpSocketState::ECN_DISABLED && !isRetransmission)
             {
-              ipTclassTag.SetTclass (0x2);
+              ipTclassTag.SetTclass (0x1);
             }
         }
       p->AddPacketTag (ipTclassTag);

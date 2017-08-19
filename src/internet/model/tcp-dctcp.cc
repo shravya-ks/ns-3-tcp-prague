@@ -108,7 +108,7 @@ TcpDctcp::ReduceCwnd (Ptr<TcpSocketState> tcb)
 {
   NS_LOG_FUNCTION (this << tcb);
   uint32_t val = (int)((1 - m_dctcpAlpha / 2.0) * tcb->m_cWnd);
-  tcb->m_cWnd = std::max (val, tcb->m_segmentSize);
+  tcb->m_cWnd = std::max (val, 2 * tcb->m_segmentSize);
 }
 
 void

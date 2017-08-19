@@ -2866,9 +2866,8 @@ TcpSocketBase::SendDataPacket (SequenceNumber32 seq, uint32_t maxSize, bool with
   if (m_tcb->m_ecnState ==  TcpSocketState::ECN_ECE_RCVD && m_ecnEchoSeq.Get() > m_ecnCWRSeq.Get() && !isRetransmission ) 
     {
       NS_LOG_INFO ("Backoff mechanism by reducing CWND  by half because we've received ECN Echo");
-      m_tcb->m_ssThresh = m_congestionControl->GetSsThresh (m_tcb, BytesInFlight ());  
-      //m_tcb->m_cWnd = std::max ((uint32_t)m_tcb->m_cWnd/2, m_tcb->m_segmentSize);
       m_congestionControl->ReduceCwnd (m_tcb);
+      m_tcb->m_ssThresh = m_tcb->m_cWnd;
       flags |= TcpHeader::CWR; 
       m_ecnCWRSeq = seq;
       m_tcb->m_ecnState = TcpSocketState::ECN_CWR_SENT;
