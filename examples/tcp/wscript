@@ -39,8 +39,8 @@ def build(bld):
 
     obj.source = 'tcp-variants-comparison.cc'
    
-    obj = bld.create_ns3_program('dctcp-dumbbell-example',
+    obj = bld.create_ns3_program('dctcp-example',
                                  ['point-to-point', 'internet', 'applications', 'flow-monitor'])
 
-    obj.source = 'dctcp-dumbbell-example.cc'
+    obj.source = 'dctcp-example.cc'
     

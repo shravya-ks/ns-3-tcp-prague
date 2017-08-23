@@ -123,7 +123,8 @@ BuildAppsTest ()
 int
 main (int argc, char *argv[])
 {
-  LogComponentEnable ("DctcpDumbbellExample", LOG_LEVEL_INFO);
+  //LogComponentEnable ("DctcpDumbbellExample", LOG_LEVEL_INFO);
+  LogComponentEnable ("TcpSocketBase", LOG_LEVEL_ALL);
   std::string bottleneckLinkDataRate = "1.5Mbps";
   std::string bottleneckLinkDelay = "20ms";
 
