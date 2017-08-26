@@ -373,19 +373,19 @@ PiSquareQueueDiscTestCase::RunPiSquareTest (StringValue mode)
                          "Verify that we can actually set the attribute QueueDelayReference");
   NS_TEST_EXPECT_MSG_EQ (queue2->SetAttributeFailSafe ("Tupdate", TimeValue (Seconds (0.03))), true,
                          "Verify that we can actually set the attribute Tupdate");
-  NS_TEST_EXPECT_MSG_EQ (queue1->SetAttributeFailSafe ("UseDualQ", BooleanValue (true)), true,
-                         "Verify that we can actually set the attribute UseDualQ");
-  NS_TEST_EXPECT_MSG_EQ (queue2->SetAttributeFailSafe ("UseDualQ", BooleanValue (true)), true,
-                         "Verify that we can actually set the attribute UseDualQ");
+  NS_TEST_EXPECT_MSG_EQ (queue1->SetAttributeFailSafe ("CoupledAqm", BooleanValue (true)), true,
+                         "Verify that we can actually set the attribute CoupledAqm");
+  NS_TEST_EXPECT_MSG_EQ (queue2->SetAttributeFailSafe ("CoupledAqm", BooleanValue (true)), true,
+                         "Verify that we can actually set the attribute CoupledAqm");
 
   BooleanValue useEcn1;
   BooleanValue useEcn2;
   queue1->GetAttribute ("UseEcn", useEcn1);
   NS_TEST_EXPECT_MSG_EQ (useEcn1.Get(), true,
-                         "Verify that the attribute UseEcn of queue1 is getting set to true when UseDualQ is true");
+                         "Verify that the attribute UseEcn of queue1 is getting set to true when CoupledAqm is true");
   queue2->GetAttribute ("UseEcn", useEcn2);
   NS_TEST_EXPECT_MSG_EQ (useEcn2.Get(), true,
-                         "Verify that the attribute UseEcn of queue2 is getting set to true when UseDualQ is true");
+                         "Verify that the attribute UseEcn of queue2 is getting set to true when CoupledAqm is true");
   queue1->Initialize ();
   queue2->Initialize ();
   EnqueueWithDelay (queue1, pktSize, 400, StringValue("L4S"));
