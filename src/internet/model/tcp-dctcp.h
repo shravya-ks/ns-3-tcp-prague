@@ -29,7 +29,8 @@ namespace ns3 {
 /**
  * \ingroup congestionOps
  *
- * \brief An implementation of DCTCP
+ * \brief An implementation of DCTCP. This model implements all the functionalities mentioned
+ * in the DCTCP SIGCOMM paper except dynamic buffer allocation in switches
  */
 
 class TcpDctcp : public TcpNewReno
@@ -129,7 +130,7 @@ private:
   void Reset (Ptr<TcpSocketState> tcb);
 
   /**
-   * \brief Sets the value of m_dctcpAlpha
+   * \brief Sets the value of m_alpha
    *
    * \param alpha DCTCP alpha parameter
    */
@@ -140,12 +141,12 @@ private:
   uint32_t m_ackedBytesTotal;           //!< Total number of acked bytes
   SequenceNumber32 m_priorRcvNxt;       //!< Sequence number of the first missing byte in data
   bool m_priorRcvNxtFlag;               //!< Variable used in setting the value of m_priorRcvNxt for first time
-  double m_dctcpAlpha;                  //!< Parameter used to estimate fraction of sent bytes that encountered congestion
+  double m_alpha;                       //!< Parameter used to estimate fraction of sent bytes that encountered congestion
   SequenceNumber32 m_nextSeq;           //!< TCP sequence number threshold for beginning a new observation window
   bool m_nextSeqFlag;                   //!< Variable used in setting the value of m_nextSeq for first time
   bool m_ceState;                       //!< DCTCP Congestion Experienced state
   bool m_delayedAckReserved;            //!< Delayed Ack state
-  double m_dctcpG;                      //!< Estimation gain
+  double m_g;                           //!< Estimation gain
 };
 
 } // namespace ns3

@@ -1,3 +1,30 @@
+/* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
+/*
+ * Copyright (c) 2017 NITK Surathkal
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 as
+ * published by the Free Software Foundation;
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ *
+ * Author: Shravya K.S. <shravya.ks0@gmail.com>
+ *
+ */
+
+// The network topology used in this example is based on the Fig. 17 described in
+// Mohammad Alizadeh, Albert Greenberg, David A. Maltz, Jitendra Padhye,
+// Parveen Patel, Balaji Prabhakar, Sudipta Sengupta, and Murari Sridharan.
+// "Data Center TCP (DCTCP)." In ACM SIGCOMM Computer Communication Review,
+// Vol. 40, No. 4, pp. 63-74. ACM, 2010.
+
 #include "ns3/core-module.h"
 #include "ns3/network-module.h"
 #include "ns3/internet-module.h"
@@ -71,20 +98,27 @@ int main (int argc, char *argv[])
   R2.Add (T2.Get (0));
 
   Config::SetDefault ("ns3::TcpL4Protocol::SocketType", StringValue ("ns3::TcpDctcp"));
-
-  // 42 = headers size
-  Config::SetDefault ("ns3::TcpSocket::SegmentSize", UintegerValue (1000 - 42));
+  Config::SetDefault ("ns3::TcpSocket::SegmentSize", UintegerValue (1000));
   Config::SetDefault ("ns3::TcpSocket::DelAckCount", UintegerValue (1));
   GlobalValue::Bind ("ChecksumEnabled", BooleanValue (false));
 
-  uint32_t meanPktSize = 500;
+  uint32_t meanPktSize = 1000;
 
   Config::SetDefault ("ns3::RedQueueDisc::Mode", StringValue ("QUEUE_DISC_MODE_PACKETS"));
   Config::SetDefault ("ns3::RedQueueDisc::MeanPktSize", UintegerValue (meanPktSize));
+
+  // DCTCP tracks instantaneous queue length only; so set QW = 1
   Config::SetDefault ("ns3::RedQueueDisc::QW", DoubleValue (1));
-  Config::SetDefault ("ns3::RedQueueDisc::MinTh", DoubleValue (85));
-  Config::SetDefault ("ns3::RedQueueDisc::MaxTh", DoubleValue (85));
-  Config::SetDefault ("ns3::RedQueueDisc::QueueLimit", UintegerValue (500));
+
+  // Triumph and Scorpion switches used in DCTCP Paper have 4 MB of buffer
+  // If every packet is 1000 bytes, 4195 packets can be stored in 4 MB
+  Config::SetDefault ("ns3::RedQueueDisc::QueueLimit", UintegerValue (4195));
+
+  // MinTh = MaxTh = 17% of QueueLimit as recommended in ACM SIGCOMM 2010 DCTCP Paper
+  Config::SetDefault ("ns3::RedQueueDisc::MinTh", DoubleValue (713));
+  Config::SetDefault ("ns3::RedQueueDisc::MaxTh", DoubleValue (713));
+
+  // Setting ECN is mandatory for DCTCP
   Config::SetDefault ("ns3::RedQueueDisc::UseEcn", BooleanValue (true));
 
   PointToPointHelper pointToPointSR;
@@ -203,23 +237,22 @@ int main (int argc, char *argv[])
       clientApps2.Stop (Seconds (client_stop_time));
     }
 
-
   if (writePcap)
     {
       PointToPointHelper ptp;
       std::stringstream stmp;
-      stmp << pathOut << "/dctcp-dumbbell";
+      stmp << pathOut << "/dctcp-example";
       ptp.EnablePcapAll (stmp.str ().c_str ());
     }
 
   if (writeForPlot)
     {
-      filePlotQueue1 << pathOut << "/" << "dctcp-dumbbell-queue1.plotme";
+      filePlotQueue1 << pathOut << "/" << "dctcp-example-queue-1.plotme";
       remove (filePlotQueue1.str ().c_str ());
       Ptr<QueueDisc> queue1 = queueDiscs1.Get (0);
       Simulator::ScheduleNow (&CheckQueueSize, queue1, filePlotQueue1.str ());
 
-      filePlotQueue2 << pathOut << "/" << "dctcp-dumbbell-queue2.plotme";
+      filePlotQueue2 << pathOut << "/" << "dctcp-example-queue-2.plotme";
       remove (filePlotQueue2.str ().c_str ());
       Ptr<QueueDisc> queue2 = queueDiscs2.Get (0);
       Simulator::ScheduleNow (&CheckQueueSize, queue2, filePlotQueue2.str ());

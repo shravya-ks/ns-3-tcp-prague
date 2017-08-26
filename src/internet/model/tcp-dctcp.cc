@@ -46,7 +46,7 @@ TypeId TcpDctcp::GetTypeId (void)
     .AddAttribute ("DctcpShiftG",
                    "Parameter G for updating dctcp_alpha",
                    DoubleValue (0.0625),
-                   MakeDoubleAccessor (&TcpDctcp::m_dctcpG),
+                   MakeDoubleAccessor (&TcpDctcp::m_g),
                    MakeDoubleChecker<double> (0))
     .AddAttribute ("DctcpAlphaOnInit",
                    "Parameter for initial alpha value",
@@ -107,7 +107,7 @@ void
 TcpDctcp::ReduceCwnd (Ptr<TcpSocketState> tcb)
 {
   NS_LOG_FUNCTION (this << tcb);
-  uint32_t val = (int)((1 - m_dctcpAlpha / 2.0) * tcb->m_cWnd);
+  uint32_t val = (int)((1 - m_alpha / 2.0) * tcb->m_cWnd);
   tcb->m_cWnd = std::max (val, 2 * tcb->m_segmentSize);
 }
 
@@ -136,7 +136,7 @@ TcpDctcp::PktsAcked (Ptr<TcpSocketState> tcb, uint32_t segmentsAcked, const Time
         {
           bytesEcn = 0.0;
         }
-      m_dctcpAlpha = (1.0 - m_dctcpG) * m_dctcpAlpha + m_dctcpG * bytesEcn;
+      m_alpha = (1.0 - m_g) * m_alpha + m_g * bytesEcn;
       Reset (tcb);
     }
 }
@@ -145,7 +145,7 @@ void
 TcpDctcp::SetDctcpAlpha (double alpha)
 {
   NS_LOG_FUNCTION (this << alpha);
-  m_dctcpAlpha = alpha;
+  m_alpha = alpha;
 }
 
 void
