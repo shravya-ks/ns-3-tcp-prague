@@ -62,7 +62,6 @@ Ipv4InterfaceContainer i3i5;
 std::stringstream filePlotQueueDisc;
 std::stringstream filePlotQueueDiscAvg;
 
-
 void
 CheckQueueDiscSize (Ptr<QueueDisc> queue)
 {
@@ -83,12 +82,10 @@ CheckQueueDiscSize (Ptr<QueueDisc> queue)
   fPlotQueueDiscAvg.close ();
 }
 
-
 void
 BuildAppsTest ()
 {
-
-  LogComponentEnable ("PiSquareExample", LOG_LEVEL_ALL);
+  LogComponentEnable ("PiSquareExample", LOG_LEVEL_INFO);
 
   // SINK1 is in the right side
   uint16_t port1 = 50000;
@@ -106,12 +103,12 @@ BuildAppsTest ()
   sinkApp2.Start (Seconds (sink_start_time));
   sinkApp2.Stop (Seconds (sink_stop_time));
 
-  //Node 0 and Node 5 are Classic Sender and Receiver respectively. Node 1 and Node 4 are L4S Sender and Receiver respectively
+  // Configure Classic traffic from Node 0 to Node 5
+  // Configure L4S traffic from Node 1 to Node 4
   Config::Set ("/NodeList/0/$ns3::TcpL4Protocol/SocketType", TypeIdValue (TcpNewReno::GetTypeId ()));
-  Config::Set ("/NodeList/1/$ns3::TcpL4Protocol/SocketType",  TypeIdValue (TcpDctcp::GetTypeId ()));
+  Config::Set ("/NodeList/1/$ns3::TcpL4Protocol/SocketType", TypeIdValue (TcpDctcp::GetTypeId ()));
   Config::Set ("/NodeList/4/$ns3::TcpL4Protocol/SocketType", TypeIdValue (TcpNewReno::GetTypeId ()));
-  Config::Set ("/NodeList/5/$ns3::TcpL4Protocol/SocketType",  TypeIdValue (TcpDctcp::GetTypeId ()));
-
+  Config::Set ("/NodeList/5/$ns3::TcpL4Protocol/SocketType", TypeIdValue (TcpDctcp::GetTypeId ()));
 
   // Clients are in left side
   /*
@@ -149,15 +146,14 @@ BuildAppsTest ()
 
 }
 
-
 int main (int argc, char *argv[])
 {
   uint32_t    maxPackets = 100;
   bool        modeBytes  = false;
   uint32_t    queueDiscLimitPackets = 100;
   std::string queueDiscType = "PI2";
-  bool        coupledAqm = true;
-  bool        useEcn = true;
+  bool        coupledAqm = false;
+  bool        useEcn = false;
   std::string bottleNeckLinkBw = "1.5Mbps";
   std::string bottleNeckLinkDelay = "20ms";
   std::string pathOut;
@@ -177,8 +173,8 @@ int main (int argc, char *argv[])
   cmd.AddValue ("queueDiscLimitPackets","Max Packets allowed in the queue disc", queueDiscLimitPackets);
   cmd.AddValue ("queueDiscType", "Set Queue disc type to PI2", queueDiscType);
   cmd.AddValue ("modeBytes", "Set Queue disc mode to Packets <false> or bytes <true>", modeBytes);
-  cmd.AddValue ("coupledAqm", "Set the value as true to use Coupled AQM functionality", coupledAqm);
-  cmd.AddValue ("useEcn",     "Set the value as true to use ECN functionality", useEcn);
+  cmd.AddValue ("coupledAqm", "Set it true to use Coupled AQM functionality", coupledAqm);
+  cmd.AddValue ("useEcn", "Set it true to use ECN marking", useEcn);
   cmd.AddValue ("pathOut", "Path to save results from --writeForPlot/--writePcap/--writeFlowMonitor", pathOut);
   cmd.AddValue ("writeForPlot", "<0/1> to write results for plot (gnuplot)", writeForPlot);
   cmd.AddValue ("writePcap", "<0/1> to write results in pcapfile", writePcap);
@@ -207,8 +203,7 @@ int main (int argc, char *argv[])
   n3n4 = NodeContainer (c.Get (3), c.Get (4));
   n3n5 = NodeContainer (c.Get (3), c.Get (5));
 
-  // 42 = headers size
-  Config::SetDefault ("ns3::TcpSocket::SegmentSize", UintegerValue (1000 - 42));
+  Config::SetDefault ("ns3::TcpSocket::SegmentSize", UintegerValue (1000));
   Config::SetDefault ("ns3::TcpSocket::DelAckCount", UintegerValue (1));
   Config::SetDefault ("ns3::TcpSocketBase::UseEcn", BooleanValue (true));
   GlobalValue::Bind ("ChecksumEnabled", BooleanValue (false));
@@ -226,8 +221,8 @@ int main (int argc, char *argv[])
       Config::SetDefault ("ns3::PiSquareQueueDisc::QueueLimit", UintegerValue (queueDiscLimitPackets * pktSize));
     }
 
-  //if Coupled AQM functionality is enabled, ECN needs to be enabled 
-  if(coupledAqm == true)
+  // if Coupled AQM functionality is enabled, ECN must be enabled
+  if (coupledAqm)
     {
       useEcn = true;
     }
@@ -235,7 +230,7 @@ int main (int argc, char *argv[])
   Config::SetDefault ("ns3::PiSquareQueueDisc::MeanPktSize", UintegerValue (pktSize));
   Config::SetDefault ("ns3::PiSquareQueueDisc::CoupledAqm", BooleanValue (coupledAqm));
   Config::SetDefault ("ns3::PiSquareQueueDisc::UseEcn", BooleanValue (useEcn));
-  
+
   NS_LOG_INFO ("Install internet stack on all nodes.");
   InternetStackHelper internet;
   internet.Install (c);
@@ -246,7 +241,7 @@ int main (int argc, char *argv[])
 
   TrafficControlHelper tchPiSquare;
   handle = tchPiSquare.SetRootQueueDisc ("ns3::PiSquareQueueDisc");
- 
+
   NS_LOG_INFO ("Create channels");
   PointToPointHelper p2p;
 
@@ -316,7 +311,7 @@ int main (int argc, char *argv[])
     {
       PointToPointHelper ptp;
       std::stringstream stmp;
-      stmp << pathOut << "/pi-square";
+      stmp << pathOut << "/pi-square-example";
       ptp.EnablePcapAll (stmp.str ().c_str ());
     }
 
@@ -329,8 +324,8 @@ int main (int argc, char *argv[])
 
   if (writeForPlot)
     {
-      filePlotQueueDisc << pathOut << "/" << "pi-square-queue-disc.plotme";
-      filePlotQueueDiscAvg << pathOut << "/" << "pi-square-queue-disc_avg.plotme";
+      filePlotQueueDisc << pathOut << "/" << "pi-square-example.plotme";
+      filePlotQueueDiscAvg << pathOut << "/" << "pi-square-example-avg.plotme";
 
       remove (filePlotQueueDisc.str ().c_str ());
       remove (filePlotQueueDiscAvg.str ().c_str ());
@@ -340,11 +335,11 @@ int main (int argc, char *argv[])
 
   Simulator::Stop (Seconds (sink_stop_time));
   Simulator::Run ();
- 
+
   if (flowMonitor)
     {
       std::stringstream stmp;
-      stmp << pathOut << "/pi-square.flowmon";
+      stmp << pathOut << "/pi-square-example.flowmon";
 
       flowmon->SerializeToXmlFile (stmp.str ().c_str (), false, false);
     }
@@ -352,10 +347,10 @@ int main (int argc, char *argv[])
   std::cout << "*** Stats from the bottleneck queue disc ***" << std::endl;
 
   PiSquareQueueDisc::Stats st = StaticCast<PiSquareQueueDisc> (queueDiscs.Get (0))->GetStats ();
-  std::cout << "\t " << st.unforcedDrop << " drops due to prob mark" << std::endl;
-  std::cout << "\t " << st.unforcedMark << " marks due to prob mark" << std::endl;
-  std::cout << "\t " << st.forcedDrop << " drops due to hard mark" << std::endl;
-    
+  std::cout << "\t " << st.unforcedDrop << " unforced drops" << std::endl;
+  std::cout << "\t " << st.unforcedMark << " unforced marks" << std::endl;
+  std::cout << "\t " << st.forcedDrop << " forced drops" << std::endl;
+
   std::cout << "Destroying the simulation" << std::endl;
   Simulator::Destroy ();
   return 0;
