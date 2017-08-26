@@ -149,8 +149,8 @@ PiSquareQueueDisc::SetCoupledAqm (bool coupledAqm)
 {
   NS_LOG_FUNCTION (this);
   m_coupledAqm = coupledAqm;
-  // For Coupled AQM functionality, we require the router to enable ECN
-  if (coupledAqm == true)
+  // For Coupled AQM functionality, ECN must be enabled
+  if (coupledAqm)
     {
       m_useEcn = true;
     }
