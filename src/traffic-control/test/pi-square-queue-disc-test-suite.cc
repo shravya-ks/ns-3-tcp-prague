@@ -36,8 +36,8 @@ public:
   PiSquareQueueDiscTestItem (Ptr<Packet> p, const Address & addr, uint16_t protocol);
   virtual ~PiSquareQueueDiscTestItem ();
   virtual void AddHeader (void);
-  virtual bool Mark(void);
-  virtual bool IsL4S(void);
+  virtual bool Mark (void);
+  virtual bool IsL4S (void);
 
 private:
   PiSquareQueueDiscTestItem ();
@@ -77,7 +77,7 @@ public:
   L4SQueueDiscTestItem (Ptr<Packet> p, const Address & addr, uint16_t protocol);
   virtual ~L4SQueueDiscTestItem ();
   virtual void AddHeader (void);
-  virtual bool Mark(void);
+  virtual bool Mark (void);
   virtual bool IsL4S (void);
 
 private:
@@ -106,7 +106,7 @@ L4SQueueDiscTestItem::Mark (void)
   return true;
 }
 
-bool 
+bool
 L4SQueueDiscTestItem::IsL4S (void)
 {
   return true;
@@ -118,7 +118,7 @@ public:
   ClassicQueueDiscTestItem (Ptr<Packet> p, const Address & addr, uint16_t protocol);
   virtual ~ClassicQueueDiscTestItem ();
   virtual void AddHeader (void);
-  virtual bool Mark(void);
+  virtual bool Mark (void);
   virtual bool IsL4S (void);
 
 private:
@@ -147,7 +147,7 @@ ClassicQueueDiscTestItem::Mark (void)
   return true;
 }
 
-bool 
+bool
 ClassicQueueDiscTestItem::IsL4S (void)
 {
   return false;
@@ -271,7 +271,7 @@ PiSquareQueueDiscTestCase::RunPiSquareTest (StringValue mode)
   NS_TEST_EXPECT_MSG_EQ (queue->SetAttributeFailSafe ("QueueDelayReference", TimeValue (Seconds (0.02))), true,
                          "Verify that we can actually set the attribute QueueDelayReference");
   queue->Initialize ();
-  EnqueueWithDelay (queue, pktSize, 400, StringValue("NonDualQ"));
+  EnqueueWithDelay (queue, pktSize, 400, StringValue ("NonDualQ"));
   DequeueWithDelay (queue, 0.012, 400);
   Simulator::Stop (Seconds (8.0));
   Simulator::Run ();
@@ -300,7 +300,7 @@ PiSquareQueueDiscTestCase::RunPiSquareTest (StringValue mode)
   NS_TEST_EXPECT_MSG_EQ (queue->SetAttributeFailSafe ("QueueDelayReference", TimeValue (Seconds (0.08))), true,
                          "Verify that we can actually set the attribute QueueDelayReference");
   queue->Initialize ();
-  EnqueueWithDelay (queue, pktSize, 400, StringValue("NonDualQ"));
+  EnqueueWithDelay (queue, pktSize, 400, StringValue ("NonDualQ"));
   DequeueWithDelay (queue, 0.012, 400);
   Simulator::Stop (Seconds (8.0));
   Simulator::Run ();
@@ -329,18 +329,20 @@ PiSquareQueueDiscTestCase::RunPiSquareTest (StringValue mode)
   NS_TEST_EXPECT_MSG_EQ (queue->SetAttributeFailSafe ("QueueDelayReference", TimeValue (Seconds (0.02))), true,
                          "Verify that we can actually set the attribute QueueDelayReference");
   queue->Initialize ();
-  EnqueueWithDelay (queue, pktSize, 400, StringValue("NonDualQ"));
+  EnqueueWithDelay (queue, pktSize, 400, StringValue ("NonDualQ"));
   DequeueWithDelay (queue, 0.015, 400); // delay between two successive dequeue events is increased
   Simulator::Stop (Seconds (8.0));
   Simulator::Run ();
   st = StaticCast<PiSquareQueueDisc> (queue)->GetStats ();
   uint32_t test4 = st.unforcedDrop;
-  NS_TEST_EXPECT_MSG_GT (test4, test2, "Test 4 should have more unforced drops than test 2");  
+  NS_TEST_EXPECT_MSG_GT (test4, test2, "Test 4 should have more unforced drops than test 2");
   NS_TEST_EXPECT_MSG_EQ (st.forcedDrop, 0, "There should zero forced drops");
 
-  // test 5: Tests for DualQ Framework
+
+  // test 5: verify the working of Coupled AQM functionality
   Ptr<PiSquareQueueDisc> queue1 = CreateObject<PiSquareQueueDisc> ();
   Ptr<PiSquareQueueDisc> queue2 = CreateObject<PiSquareQueueDisc> ();
+
   NS_TEST_EXPECT_MSG_EQ (queue1->SetAttributeFailSafe ("Mode", mode), true,
                          "Verify that we can actually set the attribute Mode");
   NS_TEST_EXPECT_MSG_EQ (queue2->SetAttributeFailSafe ("Mode", mode), true,
@@ -359,15 +361,15 @@ PiSquareQueueDiscTestCase::RunPiSquareTest (StringValue mode)
                          "Verify that we can actually set the attribute B");
   NS_TEST_EXPECT_MSG_EQ (queue1->SetAttributeFailSafe ("Tupdate", TimeValue (Seconds (0.03))), true,
                          "Verify that we can actually set the attribute Tupdate");
-   NS_TEST_EXPECT_MSG_EQ (queue2->SetAttributeFailSafe ("Tupdate", TimeValue (Seconds (0.03))), true,
+  NS_TEST_EXPECT_MSG_EQ (queue2->SetAttributeFailSafe ("Tupdate", TimeValue (Seconds (0.03))), true,
                          "Verify that we can actually set the attribute Tupdate");
   NS_TEST_EXPECT_MSG_EQ (queue1->SetAttributeFailSafe ("Supdate", TimeValue (Seconds (0.0))), true,
                          "Verify that we can actually set the attribute Supdate");
-   NS_TEST_EXPECT_MSG_EQ (queue2->SetAttributeFailSafe ("Tupdate", TimeValue (Seconds (0.03))), true,
+  NS_TEST_EXPECT_MSG_EQ (queue2->SetAttributeFailSafe ("Tupdate", TimeValue (Seconds (0.03))), true,
                          "Verify that we can actually set the attribute Tupdate");
   NS_TEST_EXPECT_MSG_EQ (queue1->SetAttributeFailSafe ("DequeueThreshold", UintegerValue (10000)), true,
                          "Verify that we can actually set the attribute DequeueThreshold");
-   NS_TEST_EXPECT_MSG_EQ (queue2->SetAttributeFailSafe ("Tupdate", TimeValue (Seconds (0.03))), true,
+  NS_TEST_EXPECT_MSG_EQ (queue2->SetAttributeFailSafe ("Tupdate", TimeValue (Seconds (0.03))), true,
                          "Verify that we can actually set the attribute Tupdate");
   NS_TEST_EXPECT_MSG_EQ (queue1->SetAttributeFailSafe ("QueueDelayReference", TimeValue (Seconds (0.02))), true,
                          "Verify that we can actually set the attribute QueueDelayReference");
@@ -381,16 +383,16 @@ PiSquareQueueDiscTestCase::RunPiSquareTest (StringValue mode)
   BooleanValue useEcn1;
   BooleanValue useEcn2;
   queue1->GetAttribute ("UseEcn", useEcn1);
-  NS_TEST_EXPECT_MSG_EQ (useEcn1.Get(), true,
-                         "Verify that the attribute UseEcn of queue1 is getting set to true when CoupledAqm is true");
+  NS_TEST_EXPECT_MSG_EQ (useEcn1.Get (), true,
+                         "Verify that the attribute UseEcn of queue1 is set to true when CoupledAqm is true");
   queue2->GetAttribute ("UseEcn", useEcn2);
-  NS_TEST_EXPECT_MSG_EQ (useEcn2.Get(), true,
-                         "Verify that the attribute UseEcn of queue2 is getting set to true when CoupledAqm is true");
+  NS_TEST_EXPECT_MSG_EQ (useEcn2.Get (), true,
+                         "Verify that the attribute UseEcn of queue2 is set to true when CoupledAqm is true");
   queue1->Initialize ();
   queue2->Initialize ();
-  EnqueueWithDelay (queue1, pktSize, 400, StringValue("L4S"));
-  EnqueueWithDelay (queue2, pktSize, 400, StringValue("Classic"));
-  DequeueWithDelay (queue1, 0.015, 400); 
+  EnqueueWithDelay (queue1, pktSize, 400, StringValue ("L4S"));
+  EnqueueWithDelay (queue2, pktSize, 400, StringValue ("Classic"));
+  DequeueWithDelay (queue1, 0.015, 400);
   DequeueWithDelay (queue2, 0.015, 400);
   Simulator::Stop (Seconds (8.0));
   Simulator::Run ();
@@ -398,10 +400,9 @@ PiSquareQueueDiscTestCase::RunPiSquareTest (StringValue mode)
   PiSquareQueueDisc::Stats st2 = StaticCast<PiSquareQueueDisc> (queue2)->GetStats ();
   uint32_t mark1 = st1.unforcedMark;
   uint32_t mark2 = st2.unforcedMark;
-  NS_TEST_EXPECT_MSG_GT (mark1, mark2, "Packets of L4S traffic should have more unforced marks than packets of Classic traffic");  
+  NS_TEST_EXPECT_MSG_GT (mark1, mark2, "Packets of L4S traffic should have more unforced marks than packets of Classic traffic");
   NS_TEST_EXPECT_MSG_EQ (st1.unforcedDrop, 0, "There should be zero unforced drops for packets of L4S traffic");
   NS_TEST_EXPECT_MSG_EQ (st2.unforcedDrop, 0, "There should be zero unforced drops for packets of Classic traffic when its ECN capable");
-
 }
 
 void
@@ -410,11 +411,11 @@ PiSquareQueueDiscTestCase::Enqueue (Ptr<PiSquareQueueDisc> queue, uint32_t size,
   Address dest;
   for (uint32_t i = 0; i < nPkt; i++)
     {
-      if (trafficType.Get() == "L4S")
+      if (trafficType.Get () == "L4S")
         {
           queue->Enqueue (Create<L4SQueueDiscTestItem> (Create<Packet> (size), dest, 0));
         }
-      else if (trafficType.Get() == "Classic")
+      else if (trafficType.Get () == "Classic")
         {
           queue->Enqueue (Create<ClassicQueueDiscTestItem> (Create<Packet> (size), dest, 0));
         }
