@@ -87,6 +87,9 @@ CheckQueueDiscSize (Ptr<QueueDisc> queue)
 void
 BuildAppsTest ()
 {
+
+  LogComponentEnable ("PiSquareExample", LOG_LEVEL_ALL);
+
   // SINK1 is in the right side
   uint16_t port1 = 50000;
   Address sinkLocalAddress1 (InetSocketAddress (Ipv4Address::GetAny (), port1));
@@ -153,14 +156,21 @@ int main (int argc, char *argv[])
   bool        modeBytes  = false;
   uint32_t    queueDiscLimitPackets = 100;
   std::string queueDiscType = "PI2";
-  bool        coupledAqm = false;
-  bool        useEcn = false;
+  bool        coupledAqm = true;
+  bool        useEcn = true;
   std::string bottleNeckLinkBw = "1.5Mbps";
   std::string bottleNeckLinkDelay = "20ms";
   std::string pathOut;
   bool writeForPlot = false;
   bool writePcap = false;
   bool flowMonitor = false;
+
+  global_start_time = 0.0;
+  sink_start_time = global_start_time;
+  client_start_time = global_start_time + 1.5;
+  global_stop_time = 20.0;
+  sink_stop_time = global_stop_time + 3.0;
+  client_stop_time = global_stop_time - 2.0;
 
   CommandLine cmd;
   cmd.AddValue ("maxPackets","Max Packets allowed in the device queue", maxPackets);
