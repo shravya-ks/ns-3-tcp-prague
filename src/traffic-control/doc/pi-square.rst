@@ -54,22 +54,29 @@ The key attributes that the PiSquareQueueDisc class holds include the following:
 Examples
 ========
 
-The example for PI2 is `pie-vs-pi2.cc` located in ``src/traffic-control/examples``.  To run the file (the first invocation below shows the available command-line options):
+The example for PI2 is `pi-square-example.cc` which is located in
+``src/traffic-control/examples``. To run the file (the first invocation
+below shows the available command-line options):
 
 :: 
 
-   $ ./waf --run "pie-vs-pi2 --PrintHelp"
-   $ ./waf --run "pie-vs-pi2 --queueDiscType=PI2"
+   $ ./waf --run "pi-square-example --PrintHelp"
+   $ ./waf --run pi-square-example
+   $ ./waf --run "pi-square-example --useEcn=true"
+   $ ./waf --run "pi-square-example --coupledAqm=true"
 
 Validation
 **********
 
-The PI2 model is tested using :cpp:class:`PiSquareQueueDiscTestSuite` class defined in `src/traffic-control/test/pi-square-queue-disc-test-suite.cc`. The suite includes 4 test cases:
+The PI2 model is tested using :cpp:class:`PiSquareQueueDiscTestSuite`
+class defined in `src/traffic-control/test/pi-square-queue-disc-test-suite.cc`.
+The suite includes 4 test cases:
 
 * Test 1: simple enqueue/dequeue with defaults, no drops
 * Test 2: more data with defaults, unforced drops but no forced drops
 * Test 3: same as test 2, but with higher QueueDelayReference
 * Test 4: same as test 2, but with lesser dequeue rate
+* Test 5: verify the working of Coupled AQM functionality
 
 The test suite can be run using the following commands: 
 
