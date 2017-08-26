@@ -24,6 +24,9 @@ def build(bld):
     obj = bld.create_ns3_program('pie-example', ['point-to-point', 'internet', 'applications', 'flow-monitor', 'traffic-control'])
     obj.source = 'pie-example.cc'
    
+    obj = bld.create_ns3_program('pi-square-example', ['point-to-point', 'internet', 'applications', 'flow-monitor', 'traffic-control'])
+    obj.source = 'pi-square-example.cc'
+
     obj = bld.create_ns3_program('dual-queue-pi-square-example', ['point-to-point', 'internet', 'applications', 'flow-monitor', 'traffic-control'])
     obj.source = 'dual-queue-pi-square-example.cc'
 
