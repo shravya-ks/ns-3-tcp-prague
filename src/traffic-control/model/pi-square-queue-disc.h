@@ -114,6 +114,9 @@ public:
    */
   Time GetQueueDelay (void);
 
+  /**
+   * \brief Get drop probability
+   */
   double GetDropProb (void);
 
   /**
@@ -134,11 +137,12 @@ public:
   int64_t AssignStreams (int64_t stream);
  
   /**
-   * \brief Set the value of m_useDualQ and enable ECN functionality of the router if useDualQ is true.
+   * \brief Set the value of m_coupledAqm and enable ECN functionality
+   *        at router if coupledAqm is true.
    *
-   * \param useDualQ The value of UseDualQ.
+   * \param coupledAqm The value of CoupledAqm.
    */
-  void SetDualQ (bool useDualQ);
+  void SetCoupledAqm (bool coupledAqm);
 
 protected:
   /**
@@ -182,8 +186,8 @@ private:
   double m_a;                                   //!< Parameter to PI Square controller
   double m_b;                                   //!< Parameter to PI Square controller
   uint32_t m_dqThreshold;                       //!< Minimum queue size in bytes before dequeue rate is measured
-  bool m_useDualQ;                              //!< True if DualQ Framework is used
-  bool m_useEcn;                                //!< True if ECN is used (packets are marked instead of being dropped)
+  bool m_coupledAqm;                            //!< True to enable Coupled AQM functionality
+  bool m_useEcn;                                //!< True to enable ECN (packets will be marked instead of being dropped)
 
   // ** Variables maintained by PI Square
   double m_dropProb;                            //!< Variable used in calculation of drop probability

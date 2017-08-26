@@ -86,13 +86,13 @@ TypeId PiSquareQueueDisc::GetTypeId (void)
                    TimeValue (Seconds (0.02)),
                    MakeTimeAccessor (&PiSquareQueueDisc::m_qDelayRef),
                    MakeTimeChecker ())
-    .AddAttribute ("UseDualQ",
-                   "True to use DualQ Framework",
+    .AddAttribute ("CoupledAqm",
+                   "True to enable Coupled AQM Functionality",
                    BooleanValue (false),
-                   MakeBooleanAccessor (&PiSquareQueueDisc::SetDualQ),
+                   MakeBooleanAccessor (&PiSquareQueueDisc::SetCoupledAqm),
                    MakeBooleanChecker ())
     .AddAttribute ("UseEcn",
-                   "True to use ECN (packets are marked instead of being dropped)",
+                   "True to enable ECN (packets are marked instead of being dropped)",
                    BooleanValue (false),
                    MakeBooleanAccessor (&PiSquareQueueDisc::m_useEcn),
                    MakeBooleanChecker ())
@@ -145,12 +145,12 @@ PiSquareQueueDisc::SetQueueLimit (uint32_t lim)
 }
 
 void
-PiSquareQueueDisc::SetDualQ (bool useDualQ)
+PiSquareQueueDisc::SetCoupledAqm (bool coupledAqm)
 {
   NS_LOG_FUNCTION (this);
-  m_useDualQ = useDualQ;
-  //For DualQ framework, we require router to use ECN
-  if (useDualQ == true)
+  m_coupledAqm = coupledAqm;
+  // For Coupled AQM functionality, we require the router to enable ECN
+  if (coupledAqm == true)
     {
       m_useEcn = true;
     }
@@ -280,9 +280,9 @@ bool PiSquareQueueDisc::DropEarly (Ptr<QueueDiscItem> item, uint32_t qSize)
       return false;
     }
 
-  if (m_useDualQ && item->IsL4S ())
+  if (m_coupledAqm && item->IsL4S ())
     {
-       //Apply linear probability for L4S traffic
+       // Apply linear drop probability
        if (u > p)
          {
            earlyDrop = false;
