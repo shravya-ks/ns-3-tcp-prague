@@ -271,7 +271,7 @@ PiSquareQueueDiscTestCase::RunPiSquareTest (StringValue mode)
   NS_TEST_EXPECT_MSG_EQ (queue->SetAttributeFailSafe ("QueueDelayReference", TimeValue (Seconds (0.02))), true,
                          "Verify that we can actually set the attribute QueueDelayReference");
   queue->Initialize ();
-  EnqueueWithDelay (queue, pktSize, 400, StringValue ("NonDualQ"));
+  EnqueueWithDelay (queue, pktSize, 400, StringValue ("Unclassified"));
   DequeueWithDelay (queue, 0.012, 400);
   Simulator::Stop (Seconds (8.0));
   Simulator::Run ();
@@ -300,7 +300,7 @@ PiSquareQueueDiscTestCase::RunPiSquareTest (StringValue mode)
   NS_TEST_EXPECT_MSG_EQ (queue->SetAttributeFailSafe ("QueueDelayReference", TimeValue (Seconds (0.08))), true,
                          "Verify that we can actually set the attribute QueueDelayReference");
   queue->Initialize ();
-  EnqueueWithDelay (queue, pktSize, 400, StringValue ("NonDualQ"));
+  EnqueueWithDelay (queue, pktSize, 400, StringValue ("Unclassified"));
   DequeueWithDelay (queue, 0.012, 400);
   Simulator::Stop (Seconds (8.0));
   Simulator::Run ();
@@ -329,7 +329,7 @@ PiSquareQueueDiscTestCase::RunPiSquareTest (StringValue mode)
   NS_TEST_EXPECT_MSG_EQ (queue->SetAttributeFailSafe ("QueueDelayReference", TimeValue (Seconds (0.02))), true,
                          "Verify that we can actually set the attribute QueueDelayReference");
   queue->Initialize ();
-  EnqueueWithDelay (queue, pktSize, 400, StringValue ("NonDualQ"));
+  EnqueueWithDelay (queue, pktSize, 400, StringValue ("Unclassified"));
   DequeueWithDelay (queue, 0.015, 400); // delay between two successive dequeue events is increased
   Simulator::Stop (Seconds (8.0));
   Simulator::Run ();
