@@ -36,7 +36,7 @@ public:
   DualQueueL4SQueueDiscTestItem (Ptr<Packet> p, const Address & addr, uint16_t protocol);
   virtual ~DualQueueL4SQueueDiscTestItem ();
   virtual void AddHeader (void);
-  virtual bool Mark(void);
+  virtual bool Mark (void);
   virtual bool IsL4S (void);
 
 private:
@@ -65,7 +65,7 @@ DualQueueL4SQueueDiscTestItem::Mark (void)
   return true;
 }
 
-bool 
+bool
 DualQueueL4SQueueDiscTestItem::IsL4S (void)
 {
   return true;
@@ -77,7 +77,7 @@ public:
   DualQueueClassicQueueDiscTestItem (Ptr<Packet> p, const Address & addr, uint16_t protocol);
   virtual ~DualQueueClassicQueueDiscTestItem ();
   virtual void AddHeader (void);
-  virtual bool Mark(void);
+  virtual bool Mark (void);
   virtual bool IsL4S (void);
 
 private:
@@ -106,7 +106,7 @@ DualQueueClassicQueueDiscTestItem::Mark (void)
   return true;
 }
 
-bool 
+bool
 DualQueueClassicQueueDiscTestItem::IsL4S (void)
 {
   return false;
@@ -126,7 +126,7 @@ private:
 };
 
 DualQCoupledPiSquareQueueDiscTestCase::DualQCoupledPiSquareQueueDiscTestCase ()
-  : TestCase ("Sanity check on the dual queue pi square queue implementation")
+  : TestCase ("Sanity check on the DualQ Coupled PI Square queue disc implementation")
 {
 }
 
@@ -188,7 +188,7 @@ DualQCoupledPiSquareQueueDiscTestCase::RunPiSquareTest (StringValue mode)
   item = queue->Dequeue ();
   NS_TEST_EXPECT_MSG_EQ ((item != 0), true, "I want to remove the first packet");
   NS_TEST_EXPECT_MSG_EQ (queue->GetQueueSize (), 7 * modeSize, "There should be seven packets in there");
-  
+
   item = queue->Dequeue ();
   NS_TEST_EXPECT_MSG_EQ ((item != 0), true, "I want to remove the second packet");
   NS_TEST_EXPECT_MSG_EQ (queue->GetQueueSize (), 6 * modeSize, "There should be six packet in there");
@@ -206,7 +206,7 @@ DualQCoupledPiSquareQueueDiscTestCase::RunPiSquareTest (StringValue mode)
   item = queue->Dequeue ();
   NS_TEST_EXPECT_MSG_EQ ((item == 0), true, "There are really no packets in there");
 
-  
+
   // test 2: more data with defaults, unforced drops but no forced drops
   queue = CreateObject<DualQCoupledPiSquareQueueDisc> ();
   pktSize = 1000;  // pktSize != 0 because DequeueThreshold always works in bytes
@@ -225,15 +225,13 @@ DualQCoupledPiSquareQueueDiscTestCase::RunPiSquareTest (StringValue mode)
   NS_TEST_EXPECT_MSG_EQ (queue->SetAttributeFailSafe ("L4SMarkThresold", TimeValue (Seconds (0.001))), true,
                          "Verify that we can actually set the attribute L4SMarkThresold");
   NS_TEST_EXPECT_MSG_EQ (queue->SetAttributeFailSafe ("K", UintegerValue (2)), true,
-                         "Verify that we can actually set the attribute K"); 
+                         "Verify that we can actually set the attribute K");
   NS_TEST_EXPECT_MSG_EQ (queue->SetAttributeFailSafe ("ClassicQueueDelayReference", TimeValue (Seconds (0.15))), true,
                          "Verify that we can actually set the attribute QueueDelayReference");
   queue->Initialize ();
-  EnqueueWithDelay (queue, pktSize, 200, StringValue("L4S"));
-  EnqueueWithDelay (queue, pktSize, 200, StringValue("Classic"));
+  EnqueueWithDelay (queue, pktSize, 200, StringValue ("L4S"));
+  EnqueueWithDelay (queue, pktSize, 200, StringValue ("Classic"));
   DequeueWithDelay (queue, 0.012, 400);
-  //EnqueueWithDelay (queue, pktSize, 20, StringValue("Classic"));
-  //DequeueWithDelay (queue, 10, 20);
   Simulator::Stop (Seconds (8.0));
   Simulator::Run ();
   DualQCoupledPiSquareQueueDisc::Stats st = StaticCast<DualQCoupledPiSquareQueueDisc> (queue)->GetStats ();
@@ -244,7 +242,7 @@ DualQCoupledPiSquareQueueDiscTestCase::RunPiSquareTest (StringValue mode)
   NS_TEST_EXPECT_MSG_GT (test2L4SMark, test2ClassicMark, "Packets of L4S traffic should have more unforced marks than packets of Classic traffic");
   NS_TEST_EXPECT_MSG_NE (st.forcedDrop, 0, "There should be some forced drops");
 
-  //test 3: Test by pumping only L4S traffic
+  // test 3: Test by sending L4S traffic only
   queue = CreateObject<DualQCoupledPiSquareQueueDisc> ();
   NS_TEST_EXPECT_MSG_EQ (queue->SetAttributeFailSafe ("Mode", mode), true,
                          "Verify that we can actually set the attribute Mode");
@@ -261,12 +259,12 @@ DualQCoupledPiSquareQueueDiscTestCase::RunPiSquareTest (StringValue mode)
   NS_TEST_EXPECT_MSG_EQ (queue->SetAttributeFailSafe ("L4SMarkThresold", TimeValue (Seconds (0.001))), true,
                          "Verify that we can actually set the attribute L4SMarkThresold");
   NS_TEST_EXPECT_MSG_EQ (queue->SetAttributeFailSafe ("K", UintegerValue (2)), true,
-                         "Verify that we can actually set the attribute K"); 
+                         "Verify that we can actually set the attribute K");
   NS_TEST_EXPECT_MSG_EQ (queue->SetAttributeFailSafe ("ClassicQueueDelayReference", TimeValue (Seconds (0.15))), true,
                          "Verify that we can actually set the attribute QueueDelayReference");
   queue->Initialize ();
-  EnqueueWithDelay (queue, pktSize, 400, StringValue("L4S"));
-  DequeueWithDelay (queue, 0.012, 400); 
+  EnqueueWithDelay (queue, pktSize, 400, StringValue ("L4S"));
+  DequeueWithDelay (queue, 0.012, 400);
   Simulator::Stop (Seconds (8.0));
   Simulator::Run ();
   st = StaticCast<DualQCoupledPiSquareQueueDisc> (queue)->GetStats ();
@@ -274,7 +272,7 @@ DualQCoupledPiSquareQueueDiscTestCase::RunPiSquareTest (StringValue mode)
   NS_TEST_EXPECT_MSG_EQ (st.unforcedClassicMark, 0, "There should be zero unforced classic marks since only L4S traffic is pumped");
   NS_TEST_EXPECT_MSG_NE (st.unforcedL4SMark, 0, "There should be some L4S marks");
 
-  //test 4: Test by pumping only Classic traffic
+  // test 4: Test by sending Classic traffic only
   queue = CreateObject<DualQCoupledPiSquareQueueDisc> ();
   NS_TEST_EXPECT_MSG_EQ (queue->SetAttributeFailSafe ("Mode", mode), true,
                          "Verify that we can actually set the attribute Mode");
@@ -291,21 +289,19 @@ DualQCoupledPiSquareQueueDiscTestCase::RunPiSquareTest (StringValue mode)
   NS_TEST_EXPECT_MSG_EQ (queue->SetAttributeFailSafe ("L4SMarkThresold", TimeValue (Seconds (0.001))), true,
                          "Verify that we can actually set the attribute L4SMarkThresold");
   NS_TEST_EXPECT_MSG_EQ (queue->SetAttributeFailSafe ("K", UintegerValue (2)), true,
-                         "Verify that we can actually set the attribute K"); 
+                         "Verify that we can actually set the attribute K");
   NS_TEST_EXPECT_MSG_EQ (queue->SetAttributeFailSafe ("ClassicQueueDelayReference", TimeValue (Seconds (0.15))), true,
                          "Verify that we can actually set the attribute QueueDelayReference");
   queue->Initialize ();
-  EnqueueWithDelay (queue, pktSize, 400, StringValue("Classic"));
-  DequeueWithDelay (queue, 0.012, 400); 
+  EnqueueWithDelay (queue, pktSize, 400, StringValue ("Classic"));
+  DequeueWithDelay (queue, 0.012, 400);
   Simulator::Stop (Seconds (8.0));
   Simulator::Run ();
   st = StaticCast<DualQCoupledPiSquareQueueDisc> (queue)->GetStats ();
   NS_TEST_EXPECT_MSG_EQ (st.unforcedClassicDrop, 0, "There should be zero unforced classic drops since packets are ECN capable ");
   NS_TEST_EXPECT_MSG_NE (st.unforcedClassicMark, 0, "There should be some unforced classic marks");
   NS_TEST_EXPECT_MSG_EQ (st.unforcedL4SMark, 0, "There should be zero L4S marks since only Classic traffic is pumped");
-
 }
-
 
 void
 DualQCoupledPiSquareQueueDiscTestCase::Enqueue (Ptr<DualQCoupledPiSquareQueueDisc> queue, uint32_t size, uint32_t nPkt, StringValue trafficType)
@@ -313,11 +309,11 @@ DualQCoupledPiSquareQueueDiscTestCase::Enqueue (Ptr<DualQCoupledPiSquareQueueDis
   Address dest;
   for (uint32_t i = 0; i < nPkt; i++)
     {
-      if (trafficType.Get() == "L4S")
+      if (trafficType.Get () == "L4S")
         {
           queue->Enqueue (Create<DualQueueL4SQueueDiscTestItem> (Create<Packet> (size), dest, 0));
         }
-      else if (trafficType.Get() == "Classic")
+      else if (trafficType.Get () == "Classic")
         {
           queue->Enqueue (Create<DualQueueClassicQueueDiscTestItem> (Create<Packet> (size), dest, 0));
         }
@@ -331,7 +327,7 @@ DualQCoupledPiSquareQueueDiscTestCase::EnqueueWithDelay (Ptr<DualQCoupledPiSquar
   double delay = 0.01;  // enqueue packets with delay
   for (uint32_t i = 0; i < nPkt; i++)
     {
-      Simulator::Schedule (Time (Seconds (i*delay)), &DualQCoupledPiSquareQueueDiscTestCase::Enqueue, this, queue, size, 1, trafficType);
+      Simulator::Schedule (Time (Seconds (i * delay)), &DualQCoupledPiSquareQueueDiscTestCase::Enqueue, this, queue, size, 1, trafficType);
     }
 }
 

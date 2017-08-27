@@ -96,8 +96,8 @@ The suite includes 4 test cases:
 
 * Test 1: simple enqueue/dequeue with defaults, no drops
 * Test 2: more packets of both L4S and Classic with L4S having higher marks than Classic
-* Test 3: Send Classic traffic only
-* Test 4: Send only L4S traffic only
+* Test 3: Send L4S traffic only
+* Test 4: Send Classic traffic only
 
 The test suite can be run using the following commands: 
 
