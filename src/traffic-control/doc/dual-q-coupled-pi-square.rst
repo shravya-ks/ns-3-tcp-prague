@@ -15,9 +15,10 @@ Model Description
 *****************
 
 The source code is located in ``src/traffic-control/model`` and consists of
-2 files: `dual-q-coupled-pi-square-queue-disc.h` and `dual-q-coupled-pi-square-queue-disc.cc`
-defining a DualQCoupledPiSquareQueueDisc class. The code was ported to |ns3|
-by Shravya K.S. based on the IETF draft [Schepper17]_.  
+2 files: `dual-q-coupled-pi-square-queue-disc.h` and
+`dual-q-coupled-pi-square-queue-disc.cc` defining a DualQCoupledPiSquareQueueDisc
+class. The code was ported to |ns3| by Shravya K.S. based on the IETF draft
+[Schepper17]_.  
 
 * class :cpp:class:`DualQCoupledPiSquareQueueDisc`: This class implements the main
 algorithm:
@@ -33,17 +34,17 @@ algorithm:
   and L4S drop probability, which is required by
   ``DualQCoupledPiSquareQueueDisc::DoDequeue()``
 
-  * ``DualQCoupledPiSquareQueueDisc::DoDequeue ()``: This routine schedules one packet
-  for dequeuing (or zero if the queue is empty).  It also makes all the AQM
-  decisions on dropping and marking. It is contained within a large while loop
-  so that if it decides to drop a packet, it will continue until it selects a
-  packet to schedule. It implements time-shifted FIFO scheduling. It takes the
-  packet that waited the longest, biased against the Classic traffic by a time-
-  shift of tshift. If an L4S packet is scheduled, the packet is marked if either
-  the L4S threshold is exceeded, or if a random marking decision is drawn
-  according to k times the probability p. If a Classic packet is scheduled,
-  the packet is dropped or marked(if ECN capable) based on the squared
-  probability p^2.
+  * ``DualQCoupledPiSquareQueueDisc::DoDequeue ()``: This routine schedules
+  one packet for dequeuing (or zero if the queue is empty).  It also makes all
+  the AQM decisions on dropping and marking. It is contained within a large
+  while loop so that if it decides to drop a packet, it will continue until
+  it selects a packet to schedule. It implements time-shifted FIFO scheduling.
+  It takes the packet that waited the longest, biased against the Classic
+  traffic by a time-shift of tshift. If an L4S packet is scheduled, the packet
+  is marked if either the L4S threshold is exceeded, or if a random marking
+  decision is drawn according to k times the probability p. If a Classic packet
+  is scheduled, the packet is dropped or marked(if ECN capable) based on the
+  squared probability p^2.
 
 References
 ==========
@@ -58,7 +59,8 @@ References
 Attributes
 ==========
 
-The key attributes that the DualQCoupledPiSquareQueueDisc class holds include the following: 
+The key attributes that the DualQCoupledPiSquareQueueDisc class holds include
+the following: 
 
 * ``Mode:`` DualPI2 operating mode (BYTES or PACKETS). The default mode is PACKETS. 
 * ``QueueLimit:`` The maximum number of bytes or packets the queue can hold.
@@ -88,20 +90,21 @@ shows the available command-line options):
 Validation
 **********
 
-The DualPI2 model is tested using :cpp:class:`DualQCoupledPiSquareQueueDiscTestSuite`
-class defined in `src/traffic-control/test/dual-q-coupled-pi-square-queue-disc-test-suite.cc`. The suite includes 4 test cases:
+DualPI2 model is tested using :cpp:class:`DualQCoupledPiSquareQueueDiscTestSuite`
+class defined in `src/traffic-control/test/dual-q-coupled-pi-square-queue-disc-test-suite.cc`.
+The suite includes 4 test cases:
 
 * Test 1: simple enqueue/dequeue with defaults, no drops
 * Test 2: more packets of both L4S and Classic with L4S having higher marks than Classic
-* Test 3: Pump only Classic packets
-* Test 4: Pump only L4S packets
+* Test 3: Send Classic traffic only
+* Test 4: Send only L4S traffic only
 
 The test suite can be run using the following commands: 
 
 ::
 
   $ ./waf configure --enable-examples --enable-tests
-  $ ./waf build
+  $ ./waf
   $ ./test.py -s dual-q-coupled-pi-square-queue-disc
 
 or  
