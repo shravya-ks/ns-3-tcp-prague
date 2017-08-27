@@ -38,7 +38,6 @@
 #include "ns3/applications-module.h"
 #include "ns3/traffic-control-module.h"
 
-
 using namespace ns3;
 
 NS_LOG_COMPONENT_DEFINE ("DualQCoupledPiSquareExample");
@@ -68,7 +67,6 @@ Ipv4InterfaceContainer i3i5;
 
 std::stringstream filePlotQueueDisc;
 std::stringstream filePlotQueueDiscAvg;
-
 
 void
 CheckQueueDiscSize (Ptr<QueueDisc> queue)
@@ -109,17 +107,18 @@ BuildAppsTest ()
   sinkApp2.Start (Seconds (sink_start_time));
   sinkApp2.Stop (Seconds (sink_stop_time));
 
-  //Node 0 and Node 5 are Classic Sender and Receiver respectively. Node 1 and Node 4 are L4S Sender and Receiver respectively
+  // Configure Classic traffic from Node 0 to Node 5
+  // Configure L4S traffic from Node 1 to Node 4
   Config::Set ("/NodeList/0/$ns3::TcpL4Protocol/SocketType", TypeIdValue (TcpNewReno::GetTypeId ()));
-  Config::Set ("/NodeList/1/$ns3::TcpL4Protocol/SocketType",  TypeIdValue (TcpDctcp::GetTypeId ()));
+  Config::Set ("/NodeList/1/$ns3::TcpL4Protocol/SocketType", TypeIdValue (TcpDctcp::GetTypeId ()));
   Config::Set ("/NodeList/4/$ns3::TcpL4Protocol/SocketType", TypeIdValue (TcpNewReno::GetTypeId ()));
-  Config::Set ("/NodeList/5/$ns3::TcpL4Protocol/SocketType",  TypeIdValue (TcpDctcp::GetTypeId ()));
+  Config::Set ("/NodeList/5/$ns3::TcpL4Protocol/SocketType", TypeIdValue (TcpDctcp::GetTypeId ()));
 
 
   // Clients are in left side
   /*
    * Create the OnOff applications to send TCP to the server
-   * onoffhelper is a client that send data to TCP destination
+   * onoffhelper is a client that sends data to TCP destination
    */
 
   // Connection one
@@ -149,8 +148,6 @@ BuildAppsTest ()
   clientApps2.Add (clientHelper2.Install (n1n2.Get (0)));
   clientApps2.Start (Seconds (client_start_time));
   clientApps2.Stop (Seconds (client_stop_time));
-
-
 }
 
 int
@@ -201,15 +198,14 @@ main (int argc, char *argv[])
   n3n4 = NodeContainer (c.Get (3), c.Get (4));
   n3n5 = NodeContainer (c.Get (3), c.Get (5));
 
-  // 42 = headers size
-  Config::SetDefault ("ns3::TcpSocket::SegmentSize", UintegerValue (1000 - 42));
+  Config::SetDefault ("ns3::TcpSocket::SegmentSize", UintegerValue (1000));
   Config::SetDefault ("ns3::TcpSocket::DelAckCount", UintegerValue (1));
   Config::SetDefault ("ns3::TcpSocketBase::UseEcn", BooleanValue (true));
   GlobalValue::Bind ("ChecksumEnabled", BooleanValue (false));
 
   uint32_t meanPktSize = 1000;
 
-  // DualQCoupledPiSquare params
+  // DualQCoupledPiSquare parameters
   NS_LOG_INFO ("Set DualQCoupledPiSquare params");
   Config::SetDefault ("ns3::DualQCoupledPiSquareQueueDisc::Mode", StringValue ("QUEUE_DISC_MODE_PACKETS"));
   Config::SetDefault ("ns3::DualQCoupledPiSquareQueueDisc::MeanPktSize", UintegerValue (meanPktSize));
@@ -326,7 +322,7 @@ main (int argc, char *argv[])
   if (flowMonitor)
     {
       std::stringstream stmp;
-      stmp << pathOut << "/dual-qeueue-pi-square.flowmon";
+      stmp << pathOut << "/dual-q-coupled-pi-square.flowmon";
 
       flowmon->SerializeToXmlFile (stmp.str ().c_str (), false, false);
     }
@@ -334,15 +330,12 @@ main (int argc, char *argv[])
   if (printDualQCoupledPiSquareStats)
     {
       std::cout << "*** DualQCoupledPiSquare stats from Node 2 queue ***" << std::endl;
-      std::cout << "\t " << st.unforcedClassicDrop << " Classic drops due to prob mark" << std::endl;
-      std::cout << "\t " << st.unforcedClassicMark << " Classic marks due to prob mark" << std::endl;
-      std::cout << "\t " << st.unforcedL4SMark << " L4S marks due to prob mark" << std::endl;
-      std::cout << "\t " << st.forcedDrop << " drops due to queue limits" << std::endl;
+      std::cout << "\t " << st.unforcedClassicDrop << " Unforced drops (Classic traffic)" << std::endl;
+      std::cout << "\t " << st.unforcedClassicMark << " Unforced marks (Classic traffic)" << std::endl;
+      std::cout << "\t " << st.unforcedL4SMark << " Unforced marks (L4S traffic)" << std::endl;
+      std::cout << "\t " << st.forcedDrop << " Forced drops" << std::endl;
     }
 
   Simulator::Destroy ();
-
   return 0;
 }
-
-
